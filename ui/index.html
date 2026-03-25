@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <title>MUSA 5090 - CAMA Project</title>
+
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    main {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    h1 {
+      text-align: center;
+    }
+
+    nav {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+    }
+
+    @media (orientation: portrait) {
+      nav {
+        flex-direction: column;
+      }
+    }
+
+    a {
+      display: block;
+      padding: 2rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      text-decoration: none;
+      color: #333;
+      transition: all 0.2s ease-in-out;
+    }
+
+    a:hover {
+      background-color: #f5f5f5;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      transform: translateY(-2px);
+    }
+  </style>
+</head>
+
+<body>
+  <main>
+    <h1>MUSA 5090 - CAMA Project</h1>
+    <nav>
+      <a href="/reviewer">Tax Assessor Review UI</a>
+      <a href="/widget">Property Owner Widget UI</a>
+    </nav>
+  </main>
+</body>
+
+</html>
