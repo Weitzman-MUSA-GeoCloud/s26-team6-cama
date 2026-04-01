@@ -1,0 +1,26 @@
+import requests
+from google.cloud import storage
+import datetime
+
+def extract_opa_assessments(request):
+    # URL for PWD Parcels dataset
+    url = "https://hub.arcgis.com/api/v3/datasets/84baed491de44f539889f2af178ad85c_0/downloads/data?format=csv&spatialRefId=3857&where=1%3D1"
+    
+    response = requests.get(url)
+    response.raise_for_status()
+
+    # Bucket + folder
+    bucket_name = "musa5090s25-team6-raw-data"
+    folder = "opa_assessments/"
+    
+    # File name with timestamp
+    filename = f"pwd_parcels.json"
+
+    # Upload to GCS
+    client = storage.Client()
+    bucket = client.bucket(bucket_name)
+    blob = bucket.blob(folder + filename)
+
+    blob.upload_from_string(response.content, content_type="application/json")
+
+    return f"Uploaded {filename}"
