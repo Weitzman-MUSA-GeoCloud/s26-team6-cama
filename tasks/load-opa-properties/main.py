@@ -2,6 +2,7 @@ import os
 from google.cloud import bigquery
 import functions_framework
 
+
 @functions_framework.http
 def load_opa_properties(request):
     """
@@ -43,3 +44,4 @@ def load_opa_properties(request):
     except Exception as e:
         print(f"执行 SQL 过程中发生错误: {e}")
         return f"Error executing BigQuery SQL: {e}", 500
+    
