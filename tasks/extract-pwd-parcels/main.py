@@ -51,7 +51,7 @@ def extract_pwd_parcels(request):
                 gcs_file.write(content + '\n')
                 data_rows = len(lines) - 1
             else:
-                data_lines = [l for line in lines[1:] if l.strip()]
+                data_lines = [line for line in lines[1:] if line.strip()]
                 if not data_lines:
                     break
                 gcs_file.write('\n'.join(data_lines) + '\n')
