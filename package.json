@@ -1,6 +1,13 @@
 {
   "name": "cama",
   "version": "1.0.0",
+  "scripts": {
+    "lint-js": "eslint . --fix",
+    "lint-css": "stylelint '**/*.css' --fix --allow-empty-input",
+    "lint-sql": "sqlfluff fix .",
+    "lint-py": "flake8 .",
+    "lint": "npm run lint-js && npm run lint-css && npm run lint-sql && npm run lint-py"
+  },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.5",
     "@eslint/js": "^10.0.1",
