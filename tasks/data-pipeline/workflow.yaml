@@ -1,0 +1,73 @@
+main:
+  steps:
+    - extract_properties:
+        call: http.get
+        args:
+          url: "https://us-east4-musa5090s26-team6.cloudfunctions.net/extract-opa-properties"
+          auth:
+            type: OIDC
+          timeout: 540
+
+    - prepare_properties:
+        call: http.get
+        args:
+          url: "https://us-east4-musa5090s26-team6.cloudfunctions.net/prepare-opa-properties"
+          auth:
+            type: OIDC
+          timeout: 540
+
+    - load_properties:
+        call: http.get
+        args:
+          url: "https://us-east4-musa5090s26-team6.cloudfunctions.net/load-opa-properties"
+          auth:
+            type: OIDC
+          timeout: 540
+
+    - extract_assessments:
+        call: http.get
+        args:
+          url: "https://us-east4-musa5090s26-team6.cloudfunctions.net/extract-opa-assessments"
+          auth:
+            type: OIDC
+          timeout: 540
+
+    - prepare_assessments:
+        call: http.get
+        args:
+          url: "https://us-east4-musa5090s26-team6.cloudfunctions.net/prepare-opa-assessments"
+          auth:
+            type: OIDC
+          timeout: 540
+
+    - load_assessments:
+        call: http.get
+        args:
+          url: "https://us-east4-musa5090s26-team6.cloudfunctions.net/load-opa-assessments"
+          auth:
+            type: OIDC
+          timeout: 540
+
+    - extract_parcels:
+        call: http.get
+        args:
+          url: "https://us-east4-musa5090s26-team6.cloudfunctions.net/extract-pwd-parcels"
+          auth:
+            type: OIDC
+          timeout: 540
+
+    - prepare_parcels:
+        call: http.get
+        args:
+          url: "https://us-east4-musa5090s26-team6.cloudfunctions.net/prepare-pwd-parcels"
+          auth:
+            type: OIDC
+          timeout: 540
+
+    - load_parcels:
+        call: http.get
+        args:
+          url: "https://us-east4-musa5090s26-team6.cloudfunctions.net/load-pwd-parcels"
+          auth:
+            type: OIDC
+          timeout: 540

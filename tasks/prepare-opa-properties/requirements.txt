@@ -1,0 +1,4 @@
+functions-framework==3.4.0
+numpy<2.0
+pyarrow==14.0.2
+gcsfs==2024.2.0
