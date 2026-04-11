@@ -13,3 +13,6 @@ data/
 
 # Sensitive files
 keys/
+
+# AI
+.claude/worktrees/
