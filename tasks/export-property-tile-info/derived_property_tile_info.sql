@@ -3,6 +3,7 @@ CREATE OR REPLACE TABLE `derived.property_tile_info` AS (
         SELECT MAX(tax_year) AS max_year
         FROM `core.opa_assessments`
     ),
+
     latest_assessments AS (
         SELECT
             property_id,
@@ -10,6 +11,7 @@ CREATE OR REPLACE TABLE `derived.property_tile_info` AS (
         FROM `core.opa_assessments`
         WHERE tax_year = (SELECT max_year FROM latest_tax_year)
     )
+
     SELECT
         o.property_id,
         o.location AS address,
@@ -21,6 +23,7 @@ CREATE OR REPLACE TABLE `derived.property_tile_info` AS (
         ON o.property_id = par.property_id
     LEFT JOIN latest_assessments AS la
         ON o.property_id = la.property_id
-    WHERE o.category_code_description = 'RESIDENTIAL'
+    WHERE
+        o.category_code_description = 'RESIDENTIAL'
         AND par.geometry IS NOT NULL
 );
