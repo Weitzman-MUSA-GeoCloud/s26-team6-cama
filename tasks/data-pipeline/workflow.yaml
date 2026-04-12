@@ -72,6 +72,14 @@ main:
             type: OIDC
           timeout: 540
 
+    - transform_tax_year_assessment_bins:
+        call: http.get
+        args:
+          url: "https://us-east4-musa5090s26-team6.cloudfunctions.net/transform-tax-year-assessment-bins"
+          auth:
+            type: OIDC
+          timeout: 540
+
     - export_property_tile_info:
         call: http.get
         args:
