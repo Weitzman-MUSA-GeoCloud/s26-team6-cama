@@ -2,43 +2,47 @@ import json
 from google.cloud import bigquery
 from google.cloud import storage
 
+PROJECT_ID = "musa5090s26-team6"
+SQL_FILE = "generate-assessment-chart-configs.sql"
+
+BUCKET_NAME = "musa5090s26-team6-public"
+OUTPUT_PATH = "configs/current_assessment_bins.json"
+
+
 def generate_assessment_chart_configs(request):
-    bq_client = bigquery.Client()
-    storage_client = storage.Client()
+    # BigQuery client
+    bq = bigquery.Client(project=PROJECT_ID)
 
+    # Load SQL
+    with open(SQL_FILE, "r") as f:
+        query = f.read()
 
-    query = """
-        SELECT
-            tax_year,
-            lower_bound,
-            upper_bound,
-            property_count
-        FROM `musa5090s26-team6.derived.tax_year_assessment_bins`
-        ORDER BY tax_year, lower_bound
-    """
+    # Run query
+    results = bq.query(query).result()
 
-    results = bq_client.query(query).result()
-
-    # Format results
-    output = []
-    for row in results:
-        output.append({
+    # Format JSON output
+    output = [
+        {
             "tax_year": row["tax_year"],
-            "lower_bound": float(row["lower_bound"]) if row["lower_bound"] is not None else None,
-            "upper_bound": float(row["upper_bound"]) if row["upper_bound"] is not None else None,
-            "property_count": int(row["property_count"]) if row["property_count"] is not None else 0
-        })
+            "lower_bound": row["lower_bound"],
+            "upper_bound": row["upper_bound"],
+            "property_count": row["property_count"],
+        }
+        for row in results
+    ]
 
-    # Convert to JSON
-    json_data = json.dumps(output)
+    # Write to GCS
+    storage_client = storage.Client()
+    bucket = storage_client.bucket(BUCKET_NAME)
+    blob = bucket.blob(OUTPUT_PATH)
 
-   
-    bucket = storage_client.bucket("musa5090s26-team6-public")
-    blob = bucket.blob("configs/current_assessment_bins.json")
-
-    blob.upload_from_string(json_data, content_type="application/json")
+    blob.upload_from_string(
+        data=json.dumps(output),
+        content_type="application/json"
+    )
 
     return {
         "status": "success",
-        "records": len(output)
+        "rows_written": len(output),
+        "file": f"gs://{BUCKET_NAME}/{OUTPUT_PATH}"
     }
