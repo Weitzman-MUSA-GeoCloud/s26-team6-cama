@@ -46,4 +46,3 @@ def load_opa_properties(request):
     except Exception as e:
         print(f"Error occurred while executing SQL: {e}")
         return f"Error executing BigQuery SQL: {e}", 500
-
