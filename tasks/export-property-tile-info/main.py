@@ -59,3 +59,6 @@ def export_property_tile_info(request):
 
     print("Done. GeoJSON uploaded to gs://musa5090s26-team6-temp_data/property_tile_info.geojson")
     return "Success", 200
+
+
+
