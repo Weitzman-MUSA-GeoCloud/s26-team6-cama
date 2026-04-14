@@ -71,3 +71,27 @@ main:
           auth:
             type: OIDC
           timeout: 540
+
+    - transform_tax_year_assessment_bins:
+        call: http.get
+        args:
+          url: "https://us-east4-musa5090s26-team6.cloudfunctions.net/transform-tax-year-assessment-bins"
+          auth:
+            type: OIDC
+          timeout: 540
+
+    - export_property_tile_info:
+        call: http.get
+        args:
+          url: "https://us-east4-musa5090s26-team6.cloudfunctions.net/export-property-tile-info"
+          auth:
+            type: OIDC
+          timeout: 540
+
+    - generate_property_map_tiles:
+        call: http.post
+        args:
+          url: "https://us-east4-run.googleapis.com/v2/projects/musa5090s26-team6/locations/us-east4/jobs/generate-property-map-tiles:run"
+          auth:
+            type: OAuth2
+          timeout: 1800
