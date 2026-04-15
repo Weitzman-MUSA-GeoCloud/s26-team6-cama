@@ -12,7 +12,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const initialZoom = 12;
 
   // init the map on the property-map div
-  // eslint-disable-next-line no-unused-vars
   const map = L.map('property-map').setView(philly, initialZoom);
 
   // carto positron tiles. free, no api key, light gray so data pops on top
@@ -20,7 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
     subdomains: 'abcd',
-    maxZoom: 19
+    maxZoom: 19,
   }).addTo(map);
 
   // need to talk to group to confirm
