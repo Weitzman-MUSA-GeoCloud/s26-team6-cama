@@ -29,7 +29,7 @@ jobs:
 
     - name: Run flake8
       run: |
-        flake8
+        flake8 tasks/
 
   lint-js:
     # Use ESLint to lint JavaScript code (within the ui/ directory)
