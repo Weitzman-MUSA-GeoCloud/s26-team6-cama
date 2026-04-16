@@ -21,7 +21,6 @@ knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 
 ```{r libraries}
 library(tidyverse)
-library(bigrquery)
 library(skimr)
 library(corrplot)
 library(ggplot2)
@@ -35,40 +34,8 @@ library(gridExtra)
 ## 2. Connect to BigQuery and Load Data
 
 ```{r load-data}
-# Set your project ID
-project_id <- "musa5090s25-team6"
-
-# Query the opa_properties table
-sql <- "
-  SELECT
-    parcel_number,
-    sale_price,
-    sale_date,
-    market_value,
-    total_livable_area,
-    total_area,
-    number_of_bedrooms,
-    number_of_bathrooms,
-    number_stories,
-    year_built,
-    zip_code,
-    zoning,
-    building_code_description,
-    exterior_condition,
-    interior_condition,
-    quality_grade,
-    type_heater,
-    garage_spaces,
-    fireplaces,
-    basements,
-    central_air
-  FROM `musa5090s25-team6.core.opa_properties`
-  WHERE sale_price IS NOT NULL
-    AND sale_date IS NOT NULL
-"
-
-df_raw <- bq_project_query(project_id, sql) |>
-  bq_table_download()
+# Load data from local CSV exported from BigQuery
+df_raw <- read.csv("opa_properties.csv")
 
 cat("Raw row count:", nrow(df_raw), "\n")
 cat("Number of columns:", ncol(df_raw), "\n")
