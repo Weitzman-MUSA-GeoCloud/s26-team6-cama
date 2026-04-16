@@ -10,9 +10,14 @@ node_modules/
 
 # Data
 data/
+*.csv
+*.parquet
+*.jsonl
 
 # Sensitive files
 keys/
 
-# AI
-.claude/worktrees/
+# R files
+.RData
+.Rhistory
+*.Rproj.user
