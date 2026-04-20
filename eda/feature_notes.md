@@ -2,7 +2,7 @@
 
 **Issue**: #10 — Explore OPA data for assessment model
 **Team**: Spring 26 Team 6 CAMA
-**Data Source**: `musa5090s25-team6.core.opa_properties` (BigQuery)
+**Data Source**: `musa5090s26-team6.core.opa_properties` (BigQuery, exported as CSV)
 
 ---
 
@@ -20,117 +20,125 @@ Original data downloaded from [Philadelphia Properties and Assessment History](h
 ## 2. Data Cleaning Steps
 
 ### 2.1 Remove Anomalously Low Sale Prices
-
 Properties with `sale_price <= 100` were removed. These are likely family transfers or administrative transactions that do not reflect true market value.
 
-- Records removed: *(fill in after running EDA)*
-- Threshold rationale: prices at or below $100 are not representative of open market transactions
+### 2.2 Remove Anomalously High Sale Prices
+Properties with `sale_price >= 2,000,000` were removed. Analysis showed that 99% of Philadelphia residential properties sell below $2.1M. Records above this threshold are likely commercial properties, data entry errors, or incompletely filtered bundle sales.
 
-### 2.2 Remove Bundle Sales
+- Raw max sale price: **$968,000,000** (clearly not a single residential property)
+- After filtering: max sale price **$1,998,393**
+- Records removed: approximately 210,000 (out of 581,058 raw records)
 
-Properties sold on the exact same day at the exact same price are likely sold as a bundle. The `sale_price` in these cases represents the price of the entire bundle, not any individual property.
+### 2.3 Remove Bundle Sales
+Properties sold on the exact same day at the exact same price are likely sold as a bundle. The `sale_price` in those cases represents the price of the entire bundle, not any individual property.
 
 - Identified by: grouping on `sale_date` and `sale_price` where count > 1
-- Records removed: *(fill in after running EDA)*
 
-### 2.3 Target Variable
+### 2.4 Remove Invalid Property Ages
+Records where `property_age < 0` or `property_age > 200` were set to NA, as these indicate data entry errors in `year_built`.
 
-- **Predict**: `sale_price` (actual transaction price on the open market)
-- **Do NOT use**: `market_value` (OPA's own internal estimate — not the model target)
+### 2.5 Target Variable
+- **Predict**: `sale_price` (actual transaction price)
+- **Do NOT use**: `market_value` (OPA's own internal estimate — risks data leakage)
 - **Transformation**: Use `log(sale_price)` as the model target due to strong right skew
 
 ---
 
 ## 3. Feature Analysis
 
-### 3.1 Strong Predictors (High Correlation with sale_price)
+### 3.1 Correlation with sale_price (after cleaning)
 
-| Feature | Type | Notes |
-|---------|------|-------|
-| `total_livable_area` | Numeric | Strongest single predictor; apply log transform if skewed |
-| `total_area` | Numeric | Correlated with livable area; may be redundant |
-| `number_of_bathrooms` | Numeric | Strong positive relationship with price |
-| `number_of_bedrooms` | Numeric | Positive but weaker than bathrooms |
-| `exterior_condition` | Ordinal | Rated 0–7; strong signal |
-| `interior_condition` | Ordinal | Rated 0–7; strong signal |
-| `quality_grade` | Ordinal | Overall quality rating; useful predictor |
+After removing outliers, correlations with `sale_price` improved dramatically:
 
-### 3.2 Location Features
+| Feature | Correlation with sale_price | Correlation with log_sale_price |
+|---------|----------------------------|--------------------------------|
+| `log_sale_price` | **0.77** | 1.00 |
+| `total_livable_area` | **0.44** | 0.31 |
+| `number_of_bathrooms` | 0.42 | 0.30 |
+| `fireplaces` | 0.28 | 0.17 |
+| `days_since_sale` | -0.42 | **-0.56** |
+| `interior_condition` | -0.43 | **-0.41** |
+| `exterior_condition` | -0.36 | -0.33 |
+| `number_of_bedrooms` | 0.09 | 0.02 |
 
-| Feature | Type | Notes |
-|---------|------|-------|
-| `zip_code` | Categorical | Strong location signal; use target encoding |
-| `zoning` | Categorical | Residential vs. commercial distinction is important |
+> Note: `exterior_condition` and `interior_condition` are rated 0–8 where lower = better condition, which explains the negative correlation with price.
 
-### 3.3 Time Features
+### 3.2 Key Predictors
 
-| Feature | Type | Notes |
-|---------|------|-------|
-| `sale_date` | Date | Recency matters — more recent sales carry stronger signal |
-| `days_since_sale` | Derived | Transform `sale_date` to numeric days elapsed from today |
+**Strongest features (recommended for model):**
+- `days_since_sale` — strongest predictor of log_sale_price (-0.56); more recent sales reflect current market better
+- `interior_condition` / `exterior_condition` — strong negative correlation (-0.41 / -0.33)
+- `total_livable_area` — strong positive correlation (0.44 with sale_price)
+- `number_of_bathrooms` — moderate positive correlation (0.42)
+- `zip_code` — location drives significant price variation (19118 median ~$450K vs 19154 median ~$175K)
 
-### 3.4 Property Characteristics
+**Weaker features (include but lower priority):**
+- `number_of_bedrooms` — weak correlation (0.09), partly because it's correlated with `number_of_bathrooms`
+- `property_age` — weak direct correlation but may interact with condition
+- `fireplaces` — moderate correlation (0.28)
+- `garage_spaces` — moderate correlation (0.11)
 
-| Feature | Type | Notes |
-|---------|------|-------|
-| `year_built` | Numeric | Transform to `property_age = 2025 - year_built` |
-| `garage_spaces` | Numeric | Positive effect on price |
-| `fireplaces` | Numeric | Minor positive effect |
-| `central_air` | Binary | Y/N — encode as 0/1 |
-| `basements` | Categorical | Multiple categories — may need grouping |
-| `type_heater` | Categorical | Lower priority feature |
-
-### 3.5 Features to Exclude or Treat with Caution
+### 3.3 Features Excluded
 
 | Feature | Reason |
 |---------|--------|
-| `market_value` | OPA's own estimate — using it as a feature risks data leakage |
-| `number_stories` | High missing rate, low added value |
-| `type_heater` | Too many categories, weak signal |
+| `market_value` | OPA's own estimate — data leakage risk |
+| `basements` | 41.4% missing rate — too high to impute reliably |
+| `central_air` | 46.9% missing rate — too high to impute reliably |
+| `building_code_description` | Redundant with zoning |
+
+### 3.4 Missing Value Summary
+
+| Feature | Missing Rate | Strategy |
+|---------|-------------|----------|
+| `garage_spaces` | ~10% | Treat NA as 0 (assume no garage) |
+| `fireplaces` | ~10% | Treat NA as 0 (assume no fireplace) |
+| `number_of_bathrooms` | ~10% | Impute with median by zip_code |
+| `number_of_bedrooms` | ~9% | Impute with median by zip_code |
+| `total_livable_area` | ~5% | Impute with median by building type |
+| `exterior_condition` | ~5% | Impute with mode |
+| `interior_condition` | ~5% | Impute with mode |
+| `year_built` / `property_age` | ~5% | Impute with median by zip_code |
 
 ---
 
 ## 4. Feature Engineering Plan
 
-### 4.1 Numeric Transformations
+### 4.1 Derived Features
 
 ```
 log_sale_price    = log(sale_price)             # target variable
-log_livable_area  = log(total_livable_area + 1) # reduce skew
+log_livable_area  = log(total_livable_area + 1) # reduce right skew
 property_age      = 2025 - year_built           # more interpretable than raw year
-days_since_sale   = today() - sale_date         # recency signal
+days_since_sale   = today() - sale_date         # recency signal (strongest predictor)
 ```
 
 ### 4.2 Categorical Encoding
 
 | Feature | Method | Rationale |
 |---------|--------|-----------|
-| `zip_code` | Target encoding | Too many levels for one-hot; encodes location price signal directly |
-| `zoning` | One-hot (grouped) | Group rare zoning codes into "Other" |
-| `central_air` | Binary 0/1 | Simple Y/N field |
-| `basements` | One-hot (grouped) | Group minor categories together |
-| `building_code_description` | Target encoding | Many levels; strong proxy for property type and location |
+| `zip_code` | Target encoding | ~50 zip codes; encodes location price signal directly |
+| `zoning` | Grouped into 5 categories | Residential Single / Residential Multi / Commercial / Industrial / Other |
+| `exterior_condition` | Numeric as-is | Already ordinal 0–8 |
+| `interior_condition` | Numeric as-is | Already ordinal 0–8 |
 
-### 4.3 Interaction Features (Optional — for later stages)
+### 4.3 Zoning Groups
 
-- `price_per_sqft` = `sale_price / total_livable_area` — diagnostic only, not a model input
-- `age_x_condition` = `property_age * exterior_condition` — may capture renovation effect
-
-### 4.4 Missing Value Strategy
-
-| Feature | Missing Rate | Strategy |
-|---------|-------------|----------|
-| `year_built` | Low | Impute with median by zip_code |
-| `total_livable_area` | Low | Impute with median by building type |
-| `number_of_bedrooms` | Medium | Impute with median by zip_code |
-| `garage_spaces` | Medium | Treat NA as 0 (assume no garage) |
-| `exterior_condition` | Low | Impute with mode |
+```r
+zoning_group = case_when(
+  str_starts(zoning, "RM")  ~ "Residential_Multi",
+  str_starts(zoning, "RSA") | str_starts(zoning, "RSD") ~ "Residential_Single",
+  str_starts(zoning, "CMX") | str_starts(zoning, "CA")  ~ "Commercial",
+  str_starts(zoning, "I")   ~ "Industrial",
+  TRUE ~ "Other"
+)
+```
 
 ---
 
 ## 5. Recommended Feature Set for Model
 
-Based on EDA findings, the following features are recommended as inputs to `derived.assessment_inputs`:
+To be used as inputs in `derived.assessment_inputs`:
 
 **Numeric features:**
 - `log_livable_area` (derived from `total_livable_area`)
@@ -140,26 +148,24 @@ Based on EDA findings, the following features are recommended as inputs to `deri
 - `number_of_bedrooms`
 - `exterior_condition`
 - `interior_condition`
-- `quality_grade`
 - `garage_spaces`
 - `fireplaces`
+- `total_area`
 
 **Categorical features (encoded):**
 - `zip_code` (target encoded)
-- `zoning` (one-hot grouped)
-- `central_air` (binary)
-- `basements` (one-hot grouped)
+- `zoning_group` (5 grouped categories)
 
 ---
 
 ## 6. Key EDA Findings
 
-1. `sale_price` is strongly right-skewed — use `log(sale_price)` as the model target.
-2. `total_livable_area` is the strongest single predictor of sale price.
-3. Location (`zip_code`) explains a large portion of price variance and must be included.
-4. Recent sales carry a stronger price signal — `days_since_sale` should be included as a feature.
-5. `exterior_condition` and `interior_condition` have a clear ordinal relationship with price.
-6. Bundle sales and family transfers create significant noise if not filtered out before modeling.
+1. **Outlier filtering is critical**: Raw data contained sale prices up to $968M. Filtering to $100 < sale_price < $2M removed ~36% of records but dramatically improved feature correlations.
+2. **Recency is the strongest signal**: `days_since_sale` has the highest correlation with `log_sale_price` (-0.56). Philadelphia prices rose sharply 2019–2021 and have since stabilized around $250K median.
+3. **Condition matters more than size**: `interior_condition` (-0.41) and `exterior_condition` (-0.33) are stronger predictors than `total_livable_area` (0.31) when predicting log price.
+4. **Location drives large variation**: Zip code 19118 has a median sale price of ~$450K while 19154 is ~$175K — a 2.5x difference purely from location.
+5. **High missing rates for amenity features**: `garage_spaces`, `fireplaces`, `number_of_bathrooms`, and `number_of_bedrooms` all have ~10% missing — imputation strategy required before modeling.
+6. **basements and central_air must be excluded**: Both have >40% missing rates, making them unreliable for modeling.
 
 ---
 
@@ -171,8 +177,8 @@ Based on EDA findings, the following features are recommended as inputs to `deri
 | `opa_eda.html` | Rendered HTML output (knit from Rmd) |
 | `feature_notes.md` | This document — feature analysis and engineering plan |
 
-> **Note**: Raw data files are NOT committed to this repository. All data is accessed via BigQuery at `musa5090s25-team6.core.opa_properties`.
+> **Note**: Raw data files are NOT committed to this repository. Data is accessed via BigQuery at `musa5090s26-team6.core.opa_properties` and exported locally as CSV for analysis.
 
 ---
 
-*Last updated: April 2026 | Author: Team 6*
+*Last updated: April 2026 | Author: Xiaoqing Chen | Team 6*

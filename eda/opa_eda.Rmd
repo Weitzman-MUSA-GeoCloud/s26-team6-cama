@@ -21,7 +21,6 @@ knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 
 ```{r libraries}
 library(tidyverse)
-library(bigrquery)
 library(skimr)
 library(corrplot)
 library(ggplot2)
@@ -35,40 +34,8 @@ library(gridExtra)
 ## 2. Connect to BigQuery and Load Data
 
 ```{r load-data}
-# Set your project ID
-project_id <- "musa5090s25-team6"
-
-# Query the opa_properties table
-sql <- "
-  SELECT
-    parcel_number,
-    sale_price,
-    sale_date,
-    market_value,
-    total_livable_area,
-    total_area,
-    number_of_bedrooms,
-    number_of_bathrooms,
-    number_stories,
-    year_built,
-    zip_code,
-    zoning,
-    building_code_description,
-    exterior_condition,
-    interior_condition,
-    quality_grade,
-    type_heater,
-    garage_spaces,
-    fireplaces,
-    basements,
-    central_air
-  FROM `musa5090s25-team6.core.opa_properties`
-  WHERE sale_price IS NOT NULL
-    AND sale_date IS NOT NULL
-"
-
-df_raw <- bq_project_query(project_id, sql) |>
-  bq_table_download()
+# Load data from local CSV exported from BigQuery
+df_raw <- read.csv("opa_properties.csv")
 
 cat("Raw row count:", nrow(df_raw), "\n")
 cat("Number of columns:", ncol(df_raw), "\n")
@@ -88,7 +55,10 @@ summary(df_raw$sale_price)
 
 # Remove records where sale_price <= 100
 df_clean <- df_raw |>
-  filter(sale_price > 100)
+  filter(
+    sale_price > 100,
+    sale_price < 2000000
+  )
 
 cat("Rows after filtering low prices:", nrow(df_clean), "\n")
 cat("Records removed:", nrow(df_raw) - nrow(df_clean), "\n")
@@ -115,17 +85,40 @@ cat("Rows after filtering bundle sales:", nrow(df_clean), "\n")
 ```{r type-conversion}
 df_clean <- df_clean |>
   mutate(
+    # --- Date features ---
     sale_date = as.Date(sale_date),
     sale_year = year(sale_date),
-    # Days since sale — more recent sales have a smaller value
     days_since_sale = as.numeric(Sys.Date() - sale_date),
-    # Property age derived from year_built
+
+    # --- Derived numeric features ---
     property_age = 2025 - year_built,
-    # Log-transform the target variable to reduce right skew
     log_sale_price = log(sale_price),
-    # Convert condition fields to numeric
+    log_livable_area = log(total_livable_area + 1),
+
+    # --- Fix anomalous property age ---
+    property_age = ifelse(property_age < 0 | property_age > 200, NA, property_age),
+
+    # --- Condition fields to numeric ---
     exterior_condition = as.numeric(exterior_condition),
-    interior_condition = as.numeric(interior_condition)
+    interior_condition = as.numeric(interior_condition),
+
+    # --- Simplify zoning into broad categories ---
+    zoning_group = case_when(
+      str_starts(zoning, "RM") ~ "Residential_Multi",
+      str_starts(zoning, "RSA") | str_starts(zoning, "RSD") ~ "Residential_Single",
+      str_starts(zoning, "CMX") | str_starts(zoning, "CA") ~ "Commercial",
+      str_starts(zoning, "I") ~ "Industrial",
+      TRUE ~ "Other"
+    ),
+
+    # --- zip_code as character for encoding ---
+    zip_code = as.character(zip_code)
+  ) |>
+  # --- Remove remaining anomalous values ---
+  filter(
+    sale_price > 100,
+    sale_price < 2000000,
+    total_livable_area > 0 | is.na(total_livable_area)
   )
 ```
 
@@ -273,17 +266,44 @@ skim(df_clean |> select(
 
 ## 6. Key Findings
 
-1. `sale_price` is strongly right-skewed — use `log(sale_price)` as the model target variable.
-2. `total_livable_area` has the strongest correlation with `sale_price`.
-3. `zip_code` shows significant price variation across areas — location is a strong predictor.
-4. More recent sales carry a stronger price signal — `days_since_sale` should be included as a feature.
-5. `exterior_condition` and `interior_condition` show a clear ordinal relationship with price.
-6. Bundle sales and family transfers introduce significant noise and must be filtered out before modeling.
+1. **Outlier filtering is critical**: Raw data contained sale prices 
+   up to $968M. Filtering to $100 < sale_price < $2M removed ~36% 
+   of records but dramatically improved feature correlations — for 
+   example, the correlation between total_livable_area and sale_price 
+   improved from 0.05 to 0.44 after filtering.
 
-**Issues to address before modeling:**
-- `year_built` contains some outlier values that need to be cleaned.
-- `total_livable_area` has a small number of extreme values.
-- Some fields have high missing rates — decisions needed on whether to include them in the model.
+2. **Recency is the strongest predictor**: days_since_sale has the 
+   highest correlation with log_sale_price (-0.56). Philadelphia 
+   median sale prices rose sharply from ~$120K in 2010 to ~$260K 
+   in 2021, and have since stabilized. More recent sales carry 
+   stronger signals for current property values.
+
+3. **Condition outperforms size**: interior_condition (-0.41) and 
+   exterior_condition (-0.33) are stronger predictors than 
+   total_livable_area (0.31) when predicting log_sale_price.
+
+4. **Location drives large price variation**: Zip code 19118 has a 
+   median sale price of ~$450K while 19154 is ~$175K — a 2.5x 
+   difference purely from location. zip_code must be included 
+   as a feature, with target encoding recommended for modeling.
+
+5. **number_of_bedrooms is a weak predictor** (correlation: 0.09) 
+   despite being intuitively important. This is likely because 
+   bedrooms are highly correlated with bathrooms (r=0.64), and 
+   bathrooms independently carry more predictive power.
+
+6. **High missing rates for amenity features**: garage_spaces, 
+   fireplaces, number_of_bathrooms, and number_of_bedrooms all 
+   have ~10% missing values. basements and central_air are 
+   excluded entirely due to >40% missing rates.
+
+**Recommended features for the assessment model (Issue #11):**
+- Time: days_since_sale
+- Size: log_livable_area, total_area
+- Condition: exterior_condition, interior_condition, property_age
+- Location: zip_code (target encoded)
+- Amenities: number_of_bathrooms, number_of_bedrooms, 
+  garage_spaces, fireplaces
 
 ---
 
