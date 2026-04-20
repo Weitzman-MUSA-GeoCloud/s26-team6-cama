@@ -63,6 +63,7 @@ body {
 }
 
 /* ---------- info panel (left column) ---------- */
+
 /* sits in the left column, spans both grid rows */
 #info-panel {
   grid-area: info;
@@ -249,6 +250,7 @@ body {
 }
 
 /* ---------- responsive ---------- */
+
 /* stack on narrow screens, like the reviewer would if we wrote that breakpoint */
 @media (width <= 800px) {
   #widget-main {
