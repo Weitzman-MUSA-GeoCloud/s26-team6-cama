@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Property Valuation History</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- page header. same full-width bar pattern as the reviewer -->
+  <header id="widget-header">
+    <h1>Property Valuation History</h1>
+    <!-- nothing on the right yet. leaving a placeholder div in case we want controls here -->
+    <div id="header-controls"></div>
+  </header>
+
+  <!-- main grid. info panel on the left, chart on top right, table on bottom right -->
+  <main id="widget-main">
+
+    <!-- left column: opa id lookup above the property info -->
+    <aside id="info-panel">
+
+      <!-- opa id lookup. lives in the info panel since this widget is standalone -->
+      <!-- TODO: swap the text input for an address autocomplete later if time permits -->
+      <section id="lookup-section">
+        <h2>Look up a property</h2>
+        <form id="lookup-form">
+          <label for="opa-id-input" class="visually-hidden">OPA ID</label>
+          <input
+            type="text"
+            id="opa-id-input"
+            name="opa-id"
+            placeholder="Enter OPA ID (e.g. 123456789)"
+            inputmode="numeric"
+            pattern="[0-9]{9,10}"
+            autocomplete="off"
+          >
+          <button type="submit">Look up</button>
+        </form>
+      </section>
+
+      <!-- selected property. same pattern as the reviewer's selected-property section -->
+      <section id="selected-property">
+        <h2>Selected property</h2>
+        <p id="property-address" class="property-address">—</p>
+        <p id="property-city-zip" class="property-city-zip">—</p>
+        <dl>
+          <dt>OPA ID</dt><dd id="meta-opa-id">—</dd>
+          <dt>Tax balance</dt><dd id="meta-tax-balance">—</dd>
+          <dt>Records</dt><dd id="meta-record-count">—</dd>
+        </dl>
+      </section>
+
+    </aside>
+
+    <!-- top right: chart. same pattern as the reviewer's chart containers -->
+    <section id="chart-section">
+      <h3>Assessment value over time</h3>
+      <div id="valuation-chart" class="chart"></div>
+    </section>
+
+    <!-- bottom right: valuation history table -->
+    <!-- all six columns from the wireframe -->
+    <section id="table-section">
+      <h3>Valuation history</h3>
+      <div class="table-wrap">
+        <table id="valuation-table">
+          <thead>
+            <tr>
+              <th scope="col">Year</th>
+              <th scope="col">Market value</th>
+              <th scope="col">Taxable land</th>
+              <th scope="col">Taxable improvement</th>
+              <th scope="col">Exempt land</th>
+              <th scope="col">Exempt improvement</th>
+            </tr>
+          </thead>
+          <tbody id="valuation-table-body">
+            <tr>
+              <td colspan="6" class="table-empty">No property selected.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="main.js"></script>
+</body>
+</html>
