@@ -250,7 +250,7 @@ body {
 
 /* ---------- responsive ---------- */
 /* stack on narrow screens, like the reviewer would if we wrote that breakpoint */
-@media (max-width: 800px) {
+@media (width <= 800px) {
   #widget-main {
     grid-template:
       "info"

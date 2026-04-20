@@ -15,7 +15,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // TODO: update #property-address, #property-city-zip, #meta-opa-id,
     //       #meta-tax-balance, #meta-record-count, #valuation-chart,
     //       and #valuation-table-body with the results
-    // eslint-disable-next-line no-console
     console.log('lookup submitted for opa id:', opaIdInput.value);
   });
 
