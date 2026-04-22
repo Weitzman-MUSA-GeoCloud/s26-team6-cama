@@ -217,3 +217,11 @@ In each project, a service account named `data-pipeline-user` was created to pro
 - `Cloud Functions Invoker`
 - `Cloud Run Invoker`
 - `Workflows Invoker`
+## CORS Configuration for Public Bucket
+
+We configured Cross-Origin Resource Sharing (CORS) for the public bucket to allow the web application to access files.
+
+### Command used:
+
+```bash
+gcloud storage buckets update gs://musa5090s26-team6-public --cors-file=cors.json
