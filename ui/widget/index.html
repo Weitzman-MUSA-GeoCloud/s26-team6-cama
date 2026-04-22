@@ -3,67 +3,105 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Property Valuation History</title>
+  <title>Philadelphia CAMA · Property Assessment History</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&family=Open+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-  <!-- page header. same full-width bar pattern as the reviewer -->
+  <div class="city-bar">
+    <a href="../" class="city-bar-back">← Dashboard</a>
+    <span class="city-bar-title">City of Philadelphia</span>
+    <span class="city-bar-dept">Office of Property Assessment</span>
+  </div>
+
   <header id="widget-header">
-    <h1>Property Valuation History</h1>
-    <!-- nothing on the right yet. leaving a placeholder div in case we want controls here -->
+    <div class="header-brand">
+      <div class="header-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+          <polyline points="9 22 9 12 15 12 15 22"></polyline>
+        </svg>
+      </div>
+      <h1>Property Assessment History</h1>
+    </div>
     <div id="header-controls"></div>
   </header>
 
-  <!-- main grid. info panel on the left, chart on top right, table on bottom right -->
   <main id="widget-main">
 
-    <!-- left column: opa id lookup above the property info -->
     <aside id="info-panel">
 
-      <!-- opa id lookup. lives in the info panel since this widget is standalone -->
-      <!-- TODO: swap the text input for an address autocomplete later if time permits -->
       <section id="lookup-section">
-        <h2>Look up a property</h2>
+        <h2>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          Look up a property
+        </h2>
         <form id="lookup-form">
-          <label for="opa-id-input" class="visually-hidden">OPA ID</label>
-          <input
-            type="text"
-            id="opa-id-input"
-            name="opa-id"
-            placeholder="Enter OPA ID (e.g. 123456789)"
-            inputmode="numeric"
-            pattern="[0-9]{9,10}"
-            autocomplete="off"
-          >
-          <button type="submit">Look up</button>
+          <label for="opa-id-input" class="field-label">OPA Parcel Number</label>
+          <div class="input-row">
+            <input
+              type="text"
+              id="opa-id-input"
+              name="opa-id"
+              placeholder="e.g. 883309050"
+              inputmode="numeric"
+              pattern="[0-9]{9,10}"
+              autocomplete="off"
+            >
+            <button type="submit" class="btn-primary">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+            </button>
+          </div>
+          <p class="field-hint">Enter the 9 or 10-digit OPA parcel number</p>
         </form>
+        <p id="lookup-status" class="lookup-status" role="status" aria-live="polite"></p>
       </section>
 
-      <!-- selected property. same pattern as the reviewer's selected-property section -->
       <section id="selected-property">
-        <h2>Selected property</h2>
-        <p id="property-address" class="property-address">—</p>
-        <p id="property-city-zip" class="property-city-zip">—</p>
-        <dl>
-          <dt>OPA ID</dt><dd id="meta-opa-id">—</dd>
-          <dt>Tax balance</dt><dd id="meta-tax-balance">—</dd>
-          <dt>Records</dt><dd id="meta-record-count">—</dd>
-        </dl>
+        <h2>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+          </svg>
+          Property details
+        </h2>
+
+        <div id="property-empty" class="property-empty">
+          <p>No property selected. Use the search above to look up a property by OPA ID.</p>
+        </div>
+
+        <div id="property-loaded" hidden>
+          <p id="property-address" class="property-address">—</p>
+          <p id="property-city-zip" class="property-city-zip">—</p>
+          <dl class="property-meta">
+            <dt>OPA ID</dt><dd id="meta-opa-id">—</dd>
+            <dt>Tax balance</dt><dd id="meta-tax-balance">—</dd>
+            <dt>Records</dt><dd id="meta-record-count">—</dd>
+          </dl>
+        </div>
       </section>
 
     </aside>
 
-    <!-- top right: chart. same pattern as the reviewer's chart containers -->
     <section id="chart-section">
       <h3>Assessment value over time</h3>
+      <p class="section-subtitle">Market value by tax year</p>
       <div id="valuation-chart" class="chart"></div>
     </section>
 
-    <!-- bottom right: valuation history table -->
-    <!-- all six columns from the wireframe -->
     <section id="table-section">
-      <h3>Valuation history</h3>
+      <h3>Assessment history</h3>
+      <p class="section-subtitle">All recorded tax years</p>
       <div class="table-wrap">
         <table id="valuation-table">
           <thead>
@@ -87,6 +125,7 @@
 
   </main>
 
+  <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
   <script src="main.js"></script>
 </body>
 </html>

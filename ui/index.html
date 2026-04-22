@@ -3,66 +3,344 @@
 
 <head>
   <meta charset="utf-8" />
-  <title>MUSA 5090 - CAMA Project</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Philadelphia CAMA · Assessment Dashboard</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&family=Open+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 
   <style>
-    body {
-      font-family: sans-serif;
+    *, *::before, *::after {
+      box-sizing: border-box;
       margin: 0;
       padding: 0;
     }
 
-    main {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
+    html, body {
+      height: 100%;
     }
 
-    h1 {
+    body {
+      font-family: "Open Sans", system-ui, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      color: #fff;
+
+      /* Philadelphia blue with a subtle dot-grid texture */
+      background-color: #0f4d90;
+      background-image:
+        radial-gradient(circle at 1px 1px, rgb(255 255 255 / 8%) 1px, transparent 0);
+      background-size: 32px 32px;
+    }
+
+    /* ── Top city bar ─────────────────────────────────── */
+    .city-bar {
+      background: #f3c613;
+      color: #0f4d90;
+      font-family: "Montserrat", system-ui, sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      padding: 6px 28px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .city-bar-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #0f4d90;
+      flex-shrink: 0;
+    }
+
+    /* ── Main content ─────────────────────────────────── */
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 48px 24px;
+      gap: 52px;
+    }
+
+    /* ── Hero ─────────────────────────────────────────── */
+    .hero {
+      text-align: center;
+      max-width: 600px;
+    }
+
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgb(255 255 255 / 12%);
+      border: 1px solid rgb(255 255 255 / 25%);
+      border-radius: 100px;
+      padding: 5px 18px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      margin-bottom: 28px;
+      color: rgb(255 255 255 / 85%);
+    }
+
+    .hero h1 {
+      font-family: "Montserrat", system-ui, sans-serif;
+      font-size: clamp(28px, 5vw, 52px);
+      font-weight: 700;
+      line-height: 1.12;
+      margin-bottom: 20px;
+      letter-spacing: -0.5px;
+    }
+
+    .hero h1 span {
+      color: #f3c613;
+    }
+
+    .hero-desc {
+      font-size: 16px;
+      line-height: 1.75;
+      color: rgb(255 255 255 / 72%);
+      max-width: 460px;
+      margin: 0 auto;
+    }
+
+    /* ── Navigation cards ─────────────────────────────── */
+    .nav-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
+      width: 100%;
+      max-width: 820px;
+    }
+
+    .card {
+      display: flex;
+      flex-direction: column;
+      background: #fff;
+      border-radius: 10px;
+      padding: 0;
+      text-decoration: none;
+      color: #0f0f0f;
+      box-shadow: 0 8px 32px rgb(0 0 0 / 28%);
+      overflow: hidden;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 20px 48px rgb(0 0 0 / 40%);
+    }
+
+    .card-accent {
+      height: 4px;
+      background: #f3c613;
+    }
+
+    .card-inner {
+      padding: 32px 28px 28px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .card-icon {
+      width: 48px;
+      height: 48px;
+      background: #daedfe;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card-icon svg {
+      width: 24px;
+      height: 24px;
+      stroke: #0f4d90;
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .card h2 {
+      font-family: "Montserrat", system-ui, sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      color: #0f4d90;
+      margin: 4px 0 0;
+    }
+
+    .card p {
+      font-size: 13px;
+      line-height: 1.65;
+      color: #555;
+      flex: 1;
+    }
+
+    .card-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: "Montserrat", system-ui, sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      color: #2176d2;
+      margin-top: 8px;
+    }
+
+    .card:hover .card-link {
+      color: #0f4d90;
+    }
+
+    /* ── Stats strip ──────────────────────────────────── */
+    .stats-strip {
+      display: flex;
+      gap: 48px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .stat {
       text-align: center;
     }
 
-    nav {
-      display: flex;
-      justify-content: center;
-      gap: 1rem;
-    }
-
-    @media (orientation: portrait) {
-      nav {
-        flex-direction: column;
-      }
-    }
-
-    a {
+    .stat-value {
+      font-family: "Montserrat", system-ui, sans-serif;
+      font-size: 28px;
+      font-weight: 700;
+      color: #f3c613;
       display: block;
-      padding: 2rem;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      text-decoration: none;
-      color: #333;
-      transition: all 0.2s ease-in-out;
     }
 
-    a:hover {
-      background-color: #f5f5f5;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-      transform: translateY(-2px);
+    .stat-label {
+      font-size: 12px;
+      color: rgb(255 255 255 / 60%);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-top: 4px;
+      display: block;
+    }
+
+    /* ── Footer ───────────────────────────────────────── */
+    footer {
+      border-top: 1px solid rgb(255 255 255 / 12%);
+      padding: 20px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+      font-size: 12px;
+      color: rgb(255 255 255 / 45%);
+    }
+
+    @media (width <= 600px) {
+      footer { justify-content: center; text-align: center; }
+      .stats-strip { gap: 28px; }
     }
   </style>
 </head>
 
 <body>
-  <main>
-    <h1>MUSA 5090 - CAMA Project</h1>
-    <nav>
-      <a href="./reviewer">Tax Assessor Review UI</a>
-      <a href="./widget">Property Owner Widget UI</a>
-    </nav>
-  </main>
-</body>
 
+  <div class="city-bar">
+    <span class="city-bar-dot"></span>
+    City of Philadelphia
+    <span style="margin-left: auto; font-weight: 500; opacity: 0.7;">Office of Property Assessment</span>
+  </div>
+
+  <main>
+
+    <div class="hero">
+      <div class="hero-eyebrow">MUSA 5090 · Team 6 · Spring 2026</div>
+      <h1>Philadelphia<br><span>CAMA</span> Dashboard</h1>
+      <p class="hero-desc">
+        Computer-Assisted Mass Appraisal system for reviewing and analyzing
+        residential property assessments across Philadelphia.
+      </p>
+    </div>
+
+    <nav class="nav-cards">
+
+      <a href="./reviewer" class="card">
+        <div class="card-accent"></div>
+        <div class="card-inner">
+          <div class="card-icon">
+            <!-- map icon -->
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
+              <line x1="8" y1="2" x2="8" y2="18"></line>
+              <line x1="16" y1="6" x2="16" y2="22"></line>
+            </svg>
+          </div>
+          <h2>Tax Assessor Review</h2>
+          <p>
+            Interactive map showing the most recent assessment values for every
+            residential parcel. Color-coded by value range, with distribution
+            charts and property detail lookup.
+          </p>
+          <span class="card-link">Open reviewer →</span>
+        </div>
+      </a>
+
+      <a href="./widget" class="card">
+        <div class="card-accent"></div>
+        <div class="card-inner">
+          <div class="card-icon">
+            <!-- home icon -->
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+              <polyline points="9 22 9 12 15 12 15 22"></polyline>
+            </svg>
+          </div>
+          <h2>Property Owner Widget</h2>
+          <p>
+            Look up the full assessment history for any residential property
+            by OPA ID. Charts and tables show market value trends across all
+            recorded tax years.
+          </p>
+          <span class="card-link">Look up a property →</span>
+        </div>
+      </a>
+
+    </nav>
+
+    <div class="stats-strip">
+      <div class="stat">
+        <span class="stat-value">~560k</span>
+        <span class="stat-label">Residential parcels</span>
+      </div>
+      <div class="stat">
+        <span class="stat-value">2016</span>
+        <span class="stat-label">Latest tax year</span>
+      </div>
+      <div class="stat">
+        <span class="stat-value">BigQuery</span>
+        <span class="stat-label">Data pipeline</span>
+      </div>
+      <div class="stat">
+        <span class="stat-value">ML</span>
+        <span class="stat-label">Predicted values</span>
+      </div>
+    </div>
+
+  </main>
+
+  <footer>
+    <span>© City of Philadelphia · Office of Property Assessment</span>
+    <span>MUSA 5090 Geospatial Cloud Computing · Team 6 · 2026</span>
+  </footer>
+
+</body>
 </html>
