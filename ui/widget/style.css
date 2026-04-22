@@ -1,0 +1,271 @@
+/* widget ui base styles */
+
+/* mirrors the reviewer styles so the two apps feel like one product */
+
+/* reset-ish. keeping it light */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, sans-serif;
+  color: #1a1a1a;
+  background: #f5f5f3;
+
+  /* full viewport height so the grid has room to breathe */
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* accessibility helper. hides things visually but keeps them for screen readers */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  border: 0;
+}
+
+/* header styles. full width bar across the top. matches the reviewer header */
+#widget-header {
+  padding: 16px 24px;
+  background: #fff;
+  border-bottom: 1px solid #e0ddd4;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+#widget-header h1 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 500;
+}
+
+/* main layout. 2 column grid: info on the left, chart on top right, table below right */
+
+/* right side gets more space since the chart and table need the room */
+#widget-main {
+  flex: 1;
+  display: grid;
+  grid-template:
+    "info chart" minmax(320px, auto)
+    "info table" 1fr
+    / 1fr 2fr;
+  gap: 1px;
+  background: #e0ddd4;
+  padding: 1px;
+}
+
+/* ---------- info panel (left column) ---------- */
+
+/* sits in the left column, spans both grid rows */
+#info-panel {
+  grid-area: info;
+  background: #fff;
+  padding: 20px 24px;
+  overflow-y: auto;
+}
+
+#info-panel h2 {
+  font-size: 14px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #6b6b68;
+  margin: 0 0 12px;
+}
+
+/* sections inside the info panel get a divider between them, same as reviewer */
+#info-panel section + section {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid #e8e5dd;
+}
+
+/* lookup form */
+#lookup-section form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+#lookup-section input {
+  padding: 8px 10px;
+  font-family: inherit;
+  font-size: 14px;
+  color: #1a1a1a;
+  background: #fff;
+  border: 1px solid #d4d1c8;
+  border-radius: 4px;
+}
+
+#lookup-section input::placeholder {
+  color: #a8a59d;
+}
+
+#lookup-section input:focus {
+  outline: none;
+  border-color: #6b6b68;
+}
+
+#lookup-section button {
+  padding: 8px 14px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  color: #1a1a1a;
+  background: #fff;
+  border: 1px solid #d4d1c8;
+  border-radius: 4px;
+  cursor: pointer;
+  align-self: flex-start;
+}
+
+#lookup-section button:hover {
+  background: #f5f5f3;
+  border-color: #6b6b68;
+}
+
+/* selected property. address + city/zip above the dl metadata list */
+.property-address {
+  font-size: 15px;
+  font-weight: 500;
+  margin: 0 0 2px;
+}
+
+.property-city-zip {
+  font-size: 13px;
+  color: #6b6b68;
+  margin: 0 0 16px;
+}
+
+#selected-property dl {
+  margin: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  font-size: 13px;
+}
+
+#selected-property dt {
+  color: #6b6b68;
+  font-size: 12px;
+}
+
+#selected-property dd {
+  margin: 0 0 4px;
+}
+
+/* ---------- chart section (top right) ---------- */
+#chart-section {
+  grid-area: chart;
+  background: #fff;
+  padding: 20px 24px;
+}
+
+#chart-section h3 {
+  font-size: 13px;
+  font-weight: 500;
+  color: #6b6b68;
+  margin: 0 0 12px;
+}
+
+/* chart placeholder. same dashed-border pattern as the reviewer */
+.chart {
+  height: 260px;
+  background: #f5f5f3;
+  border: 1px dashed #d4d1c8;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #a8a59d;
+  font-size: 12px;
+}
+
+.chart::before {
+  content: "chart loads here";
+}
+
+/* ---------- table section (bottom right) ---------- */
+#table-section {
+  grid-area: table;
+  background: #fff;
+  padding: 20px 24px;
+  overflow-x: auto;
+  min-width: 0; /* prevents the table from blowing out the grid cell */
+}
+
+#table-section h3 {
+  font-size: 13px;
+  font-weight: 500;
+  color: #6b6b68;
+  margin: 0 0 12px;
+}
+
+.table-wrap {
+  border: 1px solid #e8e5dd;
+  border-radius: 4px;
+  overflow-x: auto;
+}
+
+#valuation-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+#valuation-table thead th {
+  padding: 10px 12px;
+  text-align: left;
+  font-weight: 500;
+  color: #6b6b68;
+  background: #f5f5f3;
+  border-bottom: 1px solid #e8e5dd;
+  white-space: nowrap;
+}
+
+#valuation-table tbody td {
+  padding: 10px 12px;
+  color: #1a1a1a;
+  border-bottom: 1px solid #f0ede5;
+  white-space: nowrap;
+}
+
+#valuation-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.table-empty {
+  text-align: center !important;
+  color: #a8a59d;
+  font-style: italic;
+  padding: 24px !important;
+}
+
+/* ---------- responsive ---------- */
+
+/* stack on narrow screens, like the reviewer would if we wrote that breakpoint */
+@media (width <= 800px) {
+  #widget-main {
+    grid-template:
+      "info"
+      "chart"
+      "table"
+      / 1fr;
+  }
+
+  #widget-header {
+    padding: 12px 16px;
+  }
+
+  #widget-header h1 {
+    font-size: 17px;
+  }
+}
