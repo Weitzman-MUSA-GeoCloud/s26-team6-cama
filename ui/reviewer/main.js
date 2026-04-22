@@ -181,9 +181,8 @@ const loadCharts = async () => {
       const data = await res.json();
       renderBinsChart(taxYearEl, data);
     }
-  } catch (_e) {
-    taxYearEl.querySelector
-      ? (taxYearEl.style.setProperty('--placeholder', '"Data not yet available"')) : null;
+  } catch {
+    // tax_year_assessment_bins.json not yet available; chart stays as placeholder
   }
 
   try {
@@ -193,7 +192,7 @@ const loadCharts = async () => {
       const result = renderBinsChart(predictedEl, data);
       if (result) updateSummary(result.yearData, result.latestYear);
     }
-  } catch (_e) {
+  } catch {
     // chart stays as placeholder
   }
 };

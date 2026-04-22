@@ -132,6 +132,14 @@ body {
   letter-spacing: 0.2px;
 }
 
+/* ── Button SVG icon (declared before #info-panel h2 svg to satisfy specificity order) ── */
+.btn-primary svg {
+  width: 16px;
+  height: 16px;
+  stroke: #fff;
+  flex-shrink: 0;
+}
+
 /* ── Main grid ──────────────────────────────────────── */
 #widget-main {
   flex: 1;
@@ -239,13 +247,6 @@ body {
 
 .btn-primary:hover {
   background: #0a3060;
-}
-
-.btn-primary svg {
-  width: 16px;
-  height: 16px;
-  stroke: #fff;
-  flex-shrink: 0;
 }
 
 .field-hint {
