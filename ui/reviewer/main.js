@@ -3,7 +3,7 @@
 /* global maplibregl, ApexCharts */
 
 const tileUrl = 'https://storage.googleapis.com/musa5090s26-team6-public/tiles/properties/{z}/{x}/{y}.pbf';
-const sourceLayer = 'properties';
+const sourceLayer = 'property_tile_info';
 const currentBinsUrl = 'https://storage.googleapis.com/musa5090s26-team6-public/configs/current_assessment_bins.json';
 const taxYearBinsUrl = 'https://storage.googleapis.com/musa5090s26-team6-public/configs/tax_year_assessment_bins.json';
 
