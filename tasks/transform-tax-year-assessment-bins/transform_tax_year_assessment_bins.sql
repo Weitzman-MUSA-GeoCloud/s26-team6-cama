@@ -2,12 +2,12 @@ CREATE OR REPLACE TABLE `derived.tax_year_assessment_bins` AS (
     WITH bins AS (
         SELECT
             tax_year,
-            FLOOR(assessed_value / 50000) * 50000 AS lower_bound,
-            FLOOR(assessed_value / 50000) * 50000 + 50000 AS upper_bound
+            FLOOR(market_value / 50000) * 50000 AS lower_bound,
+            FLOOR(market_value / 50000) * 50000 + 50000 AS upper_bound
         FROM `core.opa_assessments`
         WHERE
-            assessed_value IS NOT NULL
-            AND assessed_value >= 0
+            market_value IS NOT NULL
+            AND market_value >= 0
     )
 
     SELECT
