@@ -1,7 +1,15 @@
 import json
 import os
+import decimal
 import functions_framework
 from google.cloud import bigquery, storage
+
+
+class _DecimalEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, decimal.Decimal):
+            return float(obj)
+        return super().default(obj)
 
 
 @functions_framework.http
@@ -53,7 +61,7 @@ def export_property_tile_info(request):
             }
             if not first:
                 f.write(",\n")
-            f.write(json.dumps(feature))
+            f.write(json.dumps(feature, cls=_DecimalEncoder))
             first = False
         f.write("\n]}")
 
