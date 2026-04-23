@@ -7,7 +7,7 @@ CREATE OR REPLACE TABLE `derived.property_tile_info` AS (
     latest_assessments AS (
         SELECT
             property_id,
-            SAFE_CAST(market_value AS FLOAT64) AS tax_year_assessed_value
+            market_value AS tax_year_assessed_value
         FROM `core.opa_assessments`
         WHERE year = (SELECT max_year FROM latest_tax_year)
     )
