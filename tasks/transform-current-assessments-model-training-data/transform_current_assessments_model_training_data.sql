@@ -51,7 +51,8 @@ CREATE OR REPLACE TABLE `derived.current_assessments_model_training_data` AS (
         AND NOT EXISTS (
             SELECT 1
             FROM bundle_sales AS b
-            WHERE b.sale_price = c.sale_price
+            WHERE
+                b.sale_price = c.sale_price
                 AND b.sale_date = c.sale_date
         )
 );
