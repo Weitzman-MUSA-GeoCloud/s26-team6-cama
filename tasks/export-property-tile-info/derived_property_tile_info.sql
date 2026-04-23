@@ -24,12 +24,12 @@ CREATE OR REPLACE TABLE `derived.property_tile_info` AS (
     LEFT JOIN latest_assessments AS la
         ON o.property_id = la.property_id
     WHERE
-        o.category_code_description IN (
-            'SINGLE FAMILY',
-            'MULTI FAMILY',
-            'APARTMENTS  > 4 UNITS',
-            'VACANT LAND - RESIDENTIAL',
-            'GARAGE - RESIDENTIAL'
-        )
+        -- Residential-flavored categories only:
+        --   1  = SINGLE FAMILY
+        --   2  = MULTI FAMILY
+        --   8  = GARAGE - RESIDENTIAL
+        --   13 = VACANT LAND - RESIDENTIAL
+        --   14 = APARTMENTS > 4 UNITS
+        o.category_code IN ('1', '2', '8', '13', '14')
         AND par.geometry IS NOT NULL
 );

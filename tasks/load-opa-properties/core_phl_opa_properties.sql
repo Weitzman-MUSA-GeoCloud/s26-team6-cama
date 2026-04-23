@@ -21,10 +21,13 @@ CREATE OR REPLACE TABLE `core.opa_properties` AS (
         SAFE_CAST(number_stories AS INT64) AS number_stories,
         SAFE_CAST(year_built AS INT64) AS year_built,
 
-        SAFE_CAST(sale_date AS DATE) AS sale_date,
-        SAFE_CAST(recording_date AS DATE) AS recording_date,
-        SAFE_CAST(market_value_date AS DATE) AS market_value_date,
-        SAFE_CAST(assessment_date AS DATE) AS assessment_date,
+        -- OPA date fields arrive as ISO timestamps (e.g. "2023-05-12 00:00:00"
+        -- or "2023-05-12T00:00:00"), which CAST AS DATE cannot parse directly.
+        -- Cast to TIMESTAMP first so both plain dates and datetime strings work.
+        SAFE_CAST(SAFE_CAST(sale_date AS TIMESTAMP) AS DATE) AS sale_date,
+        SAFE_CAST(SAFE_CAST(recording_date AS TIMESTAMP) AS DATE) AS recording_date,
+        SAFE_CAST(SAFE_CAST(market_value_date AS TIMESTAMP) AS DATE) AS market_value_date,
+        SAFE_CAST(SAFE_CAST(assessment_date AS TIMESTAMP) AS DATE) AS assessment_date,
 
         * EXCEPT (
             parcel_number,
