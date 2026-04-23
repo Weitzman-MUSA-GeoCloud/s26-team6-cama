@@ -10,7 +10,7 @@ echo "Step 1: Downloading property_tile_info.geojson from GCS..."
 gcloud storage cp "gs://${TEMP_BUCKET}/property_tile_info.geojson" "${GEOJSON_PATH}"
 
 echo "Step 2: Converting to Mapbox Vector Tiles (zoom 12-18)..."
-mkdir -p "${TILES_DIR}"
+rm -rf "${TILES_DIR}"
 ogr2ogr \
   -f MVT "${TILES_DIR}" \
   "${GEOJSON_PATH}" \

@@ -1,13 +1,13 @@
-CREATE OR REPLACE TABLE `derived.year_assessment_bins` AS (
+CREATE OR REPLACE TABLE `derived.tax_year_assessment_bins` AS (
     WITH bins AS (
         SELECT
             year,
-            FLOOR(CAST(market_value AS FLOAT64) / 50000) * 50000 AS lower_bound,
-            FLOOR(CAST(market_value AS FLOAT64) / 50000) * 50000 + 50000 AS upper_bound
+            FLOOR(market_value / 50000) * 50000 AS lower_bound,
+            FLOOR(market_value / 50000) * 50000 + 50000 AS upper_bound
         FROM `core.opa_assessments`
         WHERE
             market_value IS NOT NULL
-            AND SAFE_CAST(market_value AS FLOAT64) >= 0
+            AND market_value >= 0
     )
 
     SELECT

@@ -7,7 +7,7 @@ CREATE OR REPLACE TABLE `derived.property_tile_info` AS (
     latest_assessments AS (
         SELECT
             property_id,
-            SAFE_CAST(market_value AS FLOAT64) AS tax_year_assessed_value
+            market_value AS tax_year_assessed_value
         FROM `core.opa_assessments`
         WHERE year = (SELECT max_year FROM latest_tax_year)
     )
@@ -24,6 +24,12 @@ CREATE OR REPLACE TABLE `derived.property_tile_info` AS (
     LEFT JOIN latest_assessments AS la
         ON o.property_id = la.property_id
     WHERE
-        o.category_code_description = 'RESIDENTIAL'
+        o.category_code_description IN (
+            'SINGLE FAMILY',
+            'MULTI FAMILY',
+            'APARTMENTS  > 4 UNITS',
+            'VACANT LAND - RESIDENTIAL',
+            'GARAGE - RESIDENTIAL'
+        )
         AND par.geometry IS NOT NULL
 );
