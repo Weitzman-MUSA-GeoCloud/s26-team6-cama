@@ -24,6 +24,12 @@ CREATE OR REPLACE TABLE `derived.property_tile_info` AS (
     LEFT JOIN latest_assessments AS la
         ON o.property_id = la.property_id
     WHERE
-        o.category_code_description = 'RESIDENTIAL'
+        o.category_code_description IN (
+            'SINGLE FAMILY',
+            'MULTI FAMILY',
+            'APARTMENTS  > 4 UNITS',
+            'VACANT LAND - RESIDENTIAL',
+            'GARAGE - RESIDENTIAL'
+        )
         AND par.geometry IS NOT NULL
 );
