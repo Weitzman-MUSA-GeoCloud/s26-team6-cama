@@ -14,6 +14,15 @@
 --     from a different market regime (pre-COVID, pre-2008 boom/bust)
 --     and their prices are not comparable to current market values.
 --     This also excludes sentinel/placeholder dates like 1700-01-01.
+--   * Price floor ($10,000): excludes nominal intra-family transfers,
+--     estate recordings, and sheriff's deeds priced at $1-$2,500.
+--   * Price ceiling ($3,000,000): excludes luxury/commercial outliers
+--     that dominate RMSE and follow different price-feature dynamics.
+--   * Category filter (1 = SFH, 2 = MFH): limits training to owner-
+--     occupied residential, which uses a comp-sales valuation approach.
+--     Apartments > 4 units (14), commercial (4), industrial (5),
+--     vacant land (6/13), and garages (8) use income / cost / land
+--     approaches and should be modeled separately.
 
 CREATE OR REPLACE TABLE `derived.current_assessments_model_training_data` AS (
     WITH bundle_sales AS (
@@ -23,6 +32,8 @@ CREATE OR REPLACE TABLE `derived.current_assessments_model_training_data` AS (
             sale_price IS NOT NULL
             AND sale_date IS NOT NULL
             AND sale_date >= '2020-01-01'
+            AND sale_price BETWEEN 10000 AND 3000000
+            AND category_code IN ('1', '2')
         GROUP BY sale_price, sale_date
         HAVING COUNT(*) > 1
     )
@@ -45,9 +56,10 @@ CREATE OR REPLACE TABLE `derived.current_assessments_model_training_data` AS (
     FROM `core.opa_properties` AS c
     WHERE
         c.sale_price IS NOT NULL
-        AND c.sale_price > 1
         AND c.sale_date IS NOT NULL
         AND c.sale_date >= '2020-01-01'
+        AND c.sale_price BETWEEN 10000 AND 3000000
+        AND c.category_code IN ('1', '2')
         AND NOT EXISTS (
             SELECT 1
             FROM bundle_sales AS b
