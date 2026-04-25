@@ -116,6 +116,14 @@ main:
             type: OIDC
           timeout: 540
 
+    - generate_tile_style_metadata:
+        call: http.get
+        args:
+          url: "https://us-east4-musa5090s26-team6.cloudfunctions.net/generate-tile-style-metadata"
+          auth:
+            type: OIDC
+          timeout: 540
+
     - generate_property_map_tiles:
         call: http.post
         args:
