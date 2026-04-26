@@ -1,40 +1,41 @@
--- Train data from current_assessment_training_data
+-- Train saleprice model using current_assessments_model_training_data
 CREATE OR REPLACE MODEL `musa5090s26-team6.derived.saleprice_model_current`
-OPTIONS(
-  model_type = 'RANDOM_FOREST_REGRESSOR',
-  input_label_cols = ['sale_price'],
-  num_parallel_tree = 200,
-  max_tree_depth = 10,
-  subsample = 0.8,
-  data_split_method = 'AUTO_SPLIT'
+OPTIONS (
+    model_type = 'RANDOM_FOREST_REGRESSOR',
+    input_label_cols = ['sale_price'],
+    num_parallel_tree = 200,
+    max_tree_depth = 10,
+    subsample = 0.8,
+    data_split_method = 'AUTO_SPLIT'
 ) AS
 
 SELECT
-  sale_price,
-  total_livable_area,
-  LOG(total_livable_area + 1)                        AS log_livable_area,
-  total_area,
-  CAST(number_of_bedrooms AS FLOAT64)                AS number_of_bedrooms,
-  CAST(number_of_bathrooms AS FLOAT64)               AS number_of_bathrooms,
-  CAST(number_stories AS FLOAT64)                    AS number_stories,
-  CAST(interior_condition AS FLOAT64)                AS interior_condition,
-  CAST(exterior_condition AS FLOAT64)                AS exterior_condition,
-  2025 - year_built                                  AS property_age,
-  DATE_DIFF(CURRENT_DATE(), sale_date, DAY)          AS days_since_sale,
-  LOG(DATE_DIFF(CURRENT_DATE(), sale_date, DAY) + 1) AS log_days_since_sale,
-  zip_code,
-  category_code_description,
-  building_code_description
+    sale_price,
+    total_livable_area,
+    LOG(total_livable_area + 1) AS log_livable_area,
+    total_area,
+    CAST(number_of_bedrooms AS FLOAT64) AS number_of_bedrooms,
+    CAST(number_of_bathrooms AS FLOAT64) AS number_of_bathrooms,
+    CAST(number_stories AS FLOAT64) AS number_stories,
+    CAST(interior_condition AS FLOAT64) AS interior_condition,
+    CAST(exterior_condition AS FLOAT64) AS exterior_condition,
+    2025 - year_built AS property_age,
+    DATE_DIFF(CURRENT_DATE(), sale_date, DAY) AS days_since_sale,
+    LOG(DATE_DIFF(CURRENT_DATE(), sale_date, DAY) + 1) AS log_days_since_sale,
+    zip_code,
+    category_code_description,
+    building_code_description
 FROM `musa5090s26-team6.derived.current_assessments_model_training_data`
-WHERE sale_price IS NOT NULL
-  AND sale_price > 1000
-  AND sale_price < 2000000
-  AND total_livable_area IS NOT NULL
-  AND year_built IS NOT NULL
-  AND sale_date IS NOT NULL
-  AND category_code_description IN (
-    'SINGLE FAMILY',
-    'MULTI FAMILY',
-    'APARTMENTS > 4 UNITS',
-    'MIXED USE'
-  )
+WHERE
+    sale_price IS NOT NULL
+    AND sale_price > 1000
+    AND sale_price < 2000000
+    AND total_livable_area IS NOT NULL
+    AND year_built IS NOT NULL
+    AND sale_date IS NOT NULL
+    AND category_code_description IN (
+        'SINGLE FAMILY',
+        'MULTI FAMILY',
+        'APARTMENTS > 4 UNITS',
+        'MIXED USE'
+    )
