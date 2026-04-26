@@ -327,7 +327,7 @@ body {
 /* ── Summary text ───────────────────────────────────── */
 #summary-text {
   font-size: 13px;
-  line-height: 1.7;
+  line-height: 1.9;
   margin: 0;
   color: var(--gray-600);
 }
