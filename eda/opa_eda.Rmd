@@ -34,7 +34,7 @@ library(gridExtra)
 ## 2. Connect to BigQuery and Load Data
 
 ```{r load-data}
-# Load data from local CSV exported from BigQuery
+# Source: musa5090s26-team6.core.opa_properties
 df_raw <- read.csv("opa_properties.csv")
 
 cat("Raw row count:", nrow(df_raw), "\n")
