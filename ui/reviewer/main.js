@@ -175,25 +175,31 @@ const loadCharts = async () => {
   const taxYearEl = document.getElementById('current-value-chart');
   const predictedEl = document.getElementById('percent-change-chart');
 
-  try {
-    const res = await fetch(taxYearBinsUrl);
-    if (res.ok) {
-      const data = await res.json();
-      renderBinsChart(taxYearEl, data);
+  const [taxYearRes, currentRes] = await Promise.allSettled([
+    fetch(taxYearBinsUrl),
+    fetch(currentBinsUrl),
+  ]);
+
+  if (taxYearRes.status === 'fulfilled' && taxYearRes.value.ok) {
+    try {
+      const data = await taxYearRes.value.json();
+      const result = renderBinsChart(taxYearEl, data);
+      if (result) updateSummary(result.yearData, result.latestYear);
+    } catch {
+      // malformed data; chart stays as placeholder
     }
-  } catch {
-    // tax_year_assessment_bins.json not yet available; chart stays as placeholder
   }
 
-  try {
-    const res = await fetch(currentBinsUrl);
-    if (res.ok) {
-      const data = await res.json();
+  if (currentRes.status === 'fulfilled' && currentRes.value.ok) {
+    try {
+      const data = await currentRes.value.json();
       const result = renderBinsChart(predictedEl, data);
-      if (result) updateSummary(result.yearData, result.latestYear);
+      if (result && !document.getElementById('summary-text').textContent) {
+        updateSummary(result.yearData, result.latestYear);
+      }
+    } catch {
+      // chart stays as placeholder
     }
-  } catch {
-    // chart stays as placeholder
   }
 };
 
