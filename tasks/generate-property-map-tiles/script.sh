@@ -19,6 +19,10 @@ ogr2ogr \
   -dsco COMPRESS=NO
 
 echo "Step 3: Uploading tiles to public GCS bucket..."
-gcloud storage cp -r "${TILES_DIR}/*" "gs://${PUBLIC_BUCKET}/tiles/"
+# Upload under tiles/properties/ to match the frontend's URL template:
+#   https://storage.googleapis.com/<bucket>/tiles/properties/{z}/{x}/{y}.pbf
+# Clean up any previous run first so stale tiles don't linger.
+gcloud storage rm -r "gs://${PUBLIC_BUCKET}/tiles/properties/" 2>/dev/null || true
+gcloud storage cp -r "${TILES_DIR}/*" "gs://${PUBLIC_BUCKET}/tiles/properties/"
 
-echo "Done. Tiles uploaded to gs://${PUBLIC_BUCKET}/tiles/"
+echo "Done. Tiles uploaded to gs://${PUBLIC_BUCKET}/tiles/properties/"

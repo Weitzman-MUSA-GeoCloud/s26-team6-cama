@@ -38,6 +38,12 @@ def generate_tile_style_metadata(request):
 
     layers = {}
     for row in rows:
+        # If the field has no non-NULL values, APPROX_QUANTILES returns NULL
+        # (not an empty array). Skip the layer rather than failing.
+        if row.value_count == 0 or row.quantiles is None:
+            print(f"Skipping layer '{row.field}': no non-NULL values yet.")
+            continue
+
         quantiles = [_to_float(q) for q in row.quantiles]
         # APPROX_QUANTILES(x, 5) returns 6 values (0%, 20%, 40%, 60%, 80%, 100%)
         # min/max are reported separately; expose only the 4 internal breaks.
