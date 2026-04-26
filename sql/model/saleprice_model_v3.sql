@@ -61,4 +61,3 @@ WHERE
         'APARTMENTS > 4 UNITS',
         'MIXED USE'
     )
-    

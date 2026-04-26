@@ -38,4 +38,3 @@ WHERE sale_price IS NOT NULL
     'APARTMENTS > 4 UNITS',
     'MIXED USE'
   )
-  

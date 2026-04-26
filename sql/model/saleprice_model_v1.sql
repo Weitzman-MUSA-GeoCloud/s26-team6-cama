@@ -46,4 +46,3 @@ WHERE
     AND total_livable_area IS NOT NULL
     AND year_built IS NOT NULL
     AND sale_date IS NOT NULL
-    
