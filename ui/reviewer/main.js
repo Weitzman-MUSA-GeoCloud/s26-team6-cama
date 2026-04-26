@@ -134,12 +134,21 @@ const medianFromBins = (bins) => {
 
 // Render a bar chart of property counts by value bin for the most recent year
 const renderBinsChart = (container, data) => {
-  const years = [...new Set(data.map((d) => d['tax_year']))].sort();
-  const latestYear = years.at(-1);
+  const hasTaxYear = data.length > 0 && 'tax_year' in data[0];
+  let yearData, latestYear;
 
-  const yearData = data
-    .filter((d) => d['tax_year'] === latestYear && d['lower_bound'] < 2000000)
-    .sort((a, b) => a['lower_bound'] - b['lower_bound']);
+  if (hasTaxYear) {
+    const years = [...new Set(data.map((d) => d['tax_year']))].sort();
+    latestYear = years.at(-1);
+    yearData = data
+      .filter((d) => d['tax_year'] === latestYear && d['lower_bound'] < 2000000)
+      .sort((a, b) => a['lower_bound'] - b['lower_bound']);
+  } else {
+    latestYear = null;
+    yearData = data
+      .filter((d) => d['lower_bound'] < 2000000)
+      .sort((a, b) => a['lower_bound'] - b['lower_bound']);
+  }
 
   if (yearData.length === 0) return null;
 
@@ -283,7 +292,8 @@ const loadCharts = async (metadata) => {
   } catch { /* noop */ }
 
   if (!chart1Loaded) {
-    if (currentBinsData) {
+    const hasTaxYear = currentBinsData?.length > 0 && 'tax_year' in currentBinsData[0];
+    if (currentBinsData && hasTaxYear) {
       renderYearTrendChart(taxYearEl, currentBinsData);
       document.getElementById('chart1-title').textContent = 'Predicted value trend';
       document.getElementById('chart1-subtitle').textContent =

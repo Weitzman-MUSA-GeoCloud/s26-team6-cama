@@ -31,14 +31,13 @@ def export_assessment_chart_configs(request):
     print(f"Exported {len(tax_year_data)} tax_year_assessment_bins rows.")
 
     current_sql = """
-        SELECT tax_year, lower_bound, upper_bound, property_count
+        SELECT lower_bound, upper_bound, property_count
         FROM `musa5090s26-team6.derived.current_assessment_bins`
-        ORDER BY tax_year, lower_bound
+        ORDER BY lower_bound
     """
     rows = list(bq.query(current_sql).result())
     current_data = [
         {
-            'tax_year': str(r['tax_year']),
             'lower_bound': r['lower_bound'],
             'upper_bound': r['upper_bound'],
             'property_count': r['property_count'],
