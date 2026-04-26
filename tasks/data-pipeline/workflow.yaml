@@ -96,18 +96,38 @@ main:
             type: OIDC
           timeout: 540
 
-    - export_assessment_chart_configs:
-        call: http.get
-        args:
-          url: "https://us-east4-musa5090s26-team6.cloudfunctions.net/export-assessment-chart-configs"
-          auth:
-            type: OIDC
+- generate_assessment_bins:
+          call: http.get
+          args:
+            url: "https://us-central1-musa5090s26-team6.cloudfunctions.net/generate-assessment-bins"
+            timeout: 540
+
+      - generate_assessment_chart_configs:
+          call: http.get
+          args:
+            url: "https://us-central1-musa5090s26-team6.cloudfunctions.net/generate-assessment-chart-configs"
+            timeout: 540
+
+      - export_assessment_chart_configs:
+          call: http.get
+          args:
+            url: "https://us-east4-musa5090s26-team6.cloudfunctions.net/export-assessment-chart-configs"
+            auth:
+              type: OIDC
           timeout: 540
 
     - export_property_tile_info:
         call: http.get
         args:
           url: "https://us-east4-musa5090s26-team6.cloudfunctions.net/export-property-tile-info"
+          auth:
+            type: OIDC
+          timeout: 540
+
+    - generate_tile_style_metadata:
+        call: http.get
+        args:
+          url: "https://us-east4-musa5090s26-team6.cloudfunctions.net/generate-tile-style-metadata"
           auth:
             type: OIDC
           timeout: 540
