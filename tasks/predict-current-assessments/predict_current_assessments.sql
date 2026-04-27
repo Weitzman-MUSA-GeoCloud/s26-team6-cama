@@ -4,23 +4,23 @@ CREATE OR REPLACE TABLE `musa5090s26-team6.derived.current_assessments` AS
 SELECT
     property_id,
     predicted_sale_price AS predicted_value,
-    current_timestamp() AS predicted_at
+    CURRENT_TIMESTAMP() AS predicted_at
 FROM ML.PREDICT (
     MODEL `musa5090s26-team6.derived.saleprice_model_current`,
     (
         SELECT
             property_id,
             total_livable_area,
-            log(total_livable_area + 1) AS log_livable_area,
+            LOG(total_livable_area + 1) AS log_livable_area,
             total_area,
-            cast(number_of_bedrooms AS FLOAT64) AS number_of_bedrooms,
-            cast(number_of_bathrooms AS FLOAT64) AS number_of_bathrooms,
-            cast(number_stories AS FLOAT64) AS number_stories,
-            cast(interior_condition AS FLOAT64) AS interior_condition,
-            cast(exterior_condition AS FLOAT64) AS exterior_condition,
+            CAST(number_of_bedrooms AS FLOAT64) AS number_of_bedrooms,
+            CAST(number_of_bathrooms AS FLOAT64) AS number_of_bathrooms,
+            CAST(number_stories AS FLOAT64) AS number_stories,
+            CAST(interior_condition AS FLOAT64) AS interior_condition,
+            CAST(exterior_condition AS FLOAT64) AS exterior_condition,
             2025 - year_built AS property_age,
-            date_diff(current_date(), sale_date, DAY) AS days_since_sale,
-            log(date_diff(current_date(), sale_date, DAY) + 1) AS log_days_since_sale,
+            DATE_DIFF(CURRENT_DATE(), sale_date, DAY) AS days_since_sale,
+            LOG(DATE_DIFF(CURRENT_DATE(), sale_date, DAY) + 1) AS log_days_since_sale,
             zip_code,
             category_code_description,
             building_code_description
