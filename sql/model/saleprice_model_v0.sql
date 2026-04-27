@@ -20,7 +20,8 @@ SELECT
     date_diff(current_date(), sale_date, DAY) AS days_since_sale,
     zip_code
 FROM `musa5090s26-team6.core.opa_properties`
-WHERE sale_price IS NOT NULL
+WHERE 
+    sale_price IS NOT NULL
     AND sale_price > 1000
     AND total_livable_area IS NOT NULL
     AND year_built IS NOT NULL
