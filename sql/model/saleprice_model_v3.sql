@@ -24,8 +24,8 @@ clean_data AS (
         p.*
     FROM `musa5090s26-team6.core.opa_properties` AS p
     LEFT JOIN bundle_sales AS b
-        ON p.sale_price = b.sale_price
-        AND p.sale_date = b.sale_date
+            ON p.sale_price = b.sale_price
+            AND p.sale_date = b.sale_date
     WHERE b.sale_price IS NULL
 )
 

@@ -24,20 +24,20 @@ clean_data AS (
         p.*
     FROM `musa5090s26-team6.core.opa_properties` AS p
     LEFT JOIN bundle_sales AS b
-        ON p.sale_price = b.sale_price
-        AND p.sale_date = b.sale_date
+            ON p.sale_price = b.sale_price
+            AND p.sale_date = b.sale_date
     WHERE b.sale_price IS NULL
 )
 
 SELECT
     sale_price,
     total_livable_area,
-    CAST(number_of_bedrooms AS FLOAT64) AS number_of_bedrooms,
-    CAST(number_of_bathrooms AS FLOAT64) AS number_of_bathrooms,
-    CAST(exterior_condition AS FLOAT64) AS exterior_condition,
-    CAST(interior_condition AS FLOAT64) AS interior_condition,
+    cast(number_of_bedrooms AS FLOAT64) AS number_of_bedrooms,
+    cast(number_of_bathrooms AS FLOAT64) AS number_of_bathrooms,
+    cast(exterior_condition AS FLOAT64) AS exterior_condition,
+    cast(interior_condition AS FLOAT64) AS interior_condition,
     2025 - year_built AS property_age,
-    DATE_DIFF(CURRENT_DATE(), sale_date, DAY) AS days_since_sale,
+    date_diff(current_date(), sale_date, DAY) AS days_since_sale,
     zip_code
 FROM clean_data
 WHERE
