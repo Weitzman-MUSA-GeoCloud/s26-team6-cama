@@ -5,7 +5,7 @@ SELECT
     property_id,
     predicted_sale_price AS predicted_value,
     CURRENT_TIMESTAMP() AS predicted_at
-FROM ml.predict (
+FROM ML.PREDICT (
     MODEL `musa5090s26-team6.derived.saleprice_model_current`,
     (
         SELECT

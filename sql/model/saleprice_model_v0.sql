@@ -1,7 +1,7 @@
 -- v0: Baseline, no filtering, minimal features
 CREATE OR REPLACE MODEL `musa5090s26-team6.derived.saleprice_model_v0`
-OPTIONS(
-  model_type = 'RANDOM_FOREST_REGRESSOR',
+OPTIONS (
+    model_type = 'RANDOM_FOREST_REGRESSOR',
   input_label_cols = ['sale_price'],
   num_parallel_tree = 100,
   max_tree_depth = 8,

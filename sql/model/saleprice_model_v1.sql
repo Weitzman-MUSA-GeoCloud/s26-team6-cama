@@ -20,7 +20,8 @@ WITH bundle_sales AS (
 ),
 
 clean_data AS (
-    SELECT p.*
+    SELECT
+        p.*
     FROM `musa5090s26-team6.core.opa_properties` AS p
     LEFT JOIN bundle_sales AS b
         ON p.sale_price = b.sale_price
