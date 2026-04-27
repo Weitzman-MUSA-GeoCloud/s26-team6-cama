@@ -5,7 +5,7 @@ SELECT
     property_id,
     predicted_sale_price AS predicted_value,
     CURRENT_TIMESTAMP() AS predicted_at
-FROM ML.PREDICT(
+FROM ml.predict (
     MODEL `musa5090s26-team6.derived.saleprice_model_v3`,
     (
         SELECT
@@ -30,7 +30,9 @@ FROM ML.PREDICT(
         FROM `musa5090s26-team6.core.opa_properties`
         WHERE
             total_livable_area IS NOT NULL
+            AND total_livable_area > 0
             AND year_built IS NOT NULL
+            AND year_built > 1800
             AND sale_date IS NOT NULL
             AND category_code_description IN (
                 'SINGLE FAMILY',
