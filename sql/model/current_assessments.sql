@@ -4,14 +4,14 @@ CREATE OR REPLACE TABLE `musa5090s26-team6.derived.current_assessments` AS
 SELECT
     property_id,
     predicted_sale_price AS predicted_value,
-    current_timestamp() AS predicted_at
-FROM ml.PREDICT (
+    CURRENT_TIMESTAMP() AS predicted_at
+FROM ML.PREDICT (
     MODEL `musa5090s26-team6.derived.saleprice_model_v3`,
     (
         SELECT
             property_id,
             total_livable_area,
-            log(total_livable_area + 1) AS log_livable_area,
+            LOG(total_livable_area + 1) AS log_livable_area,
             total_area,
             cast(number_of_bedrooms AS FLOAT64) AS number_of_bedrooms,
             cast(number_of_bathrooms AS FLOAT64) AS number_of_bathrooms,
