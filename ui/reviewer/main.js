@@ -204,54 +204,6 @@ const renderBinsChart = (container, data) => {
   return { yearData, latestYear };
 };
 
-// Render year-over-year median trend line chart
-const renderYearTrendChart = (container, data) => {
-  const years = [...new Set(data.map((d) => d['tax_year']))].sort();
-
-  const yearPoints = years.map((year) => {
-    const yearBins = data.filter((d) => d['tax_year'] === year && d['property_count'] > 0);
-    const total = yearBins.reduce((s, d) => s + d['property_count'], 0);
-    if (total < 100) return null;
-    return { year, median: Math.round(medianFromBins(yearBins)), total };
-  }).filter(Boolean);
-
-  if (yearPoints.length === 0) return;
-
-  container.classList.add('chart-loaded');
-
-  new ApexCharts(container, {
-    chart: {
-      type: 'area',
-      height: 150,
-      toolbar: { show: false },
-      animations: { enabled: false },
-      fontFamily: '"Open Sans", system-ui, sans-serif',
-    },
-    series: [{ name: 'Median predicted value', data: yearPoints.map((d) => d.median) }],
-    xaxis: {
-      categories: yearPoints.map((d) => d.year),
-      labels: { style: { fontSize: '9px', colors: '#6d6d6d' } },
-      axisBorder: { show: false },
-      axisTicks: { show: false },
-    },
-    yaxis: {
-      labels: {
-        style: { colors: '#6d6d6d', fontSize: '10px' },
-        formatter: (v) => v >= 1000 ? `$${(v / 1000).toFixed(0)}k` : `$${v}`,
-      },
-    },
-    dataLabels: { enabled: false },
-    colors: ['#0f4d90'],
-    fill: {
-      type: 'gradient',
-      gradient: { shade: 'light', type: 'vertical', opacityFrom: 0.35, opacityTo: 0.02 },
-    },
-    stroke: { curve: 'smooth', width: 2 },
-    markers: { size: 3, colors: ['#0f4d90'], strokeColors: '#fff', strokeWidth: 2 },
-    tooltip: { y: { formatter: (v) => currencyFmt.format(v) }, theme: 'light' },
-    grid: { borderColor: '#f0ede5', strokeDashArray: 4 },
-  }).render();
-};
 
 // Compute median + total for a given tax year from bins data
 const computeStatsForYear = (data, year) => {
@@ -453,6 +405,13 @@ const fetchSuggestions = async (query) => {
 };
 
 document.addEventListener('DOMContentLoaded', async () => {
+  // Declare DOM refs early so they're available inside all closures below
+  const filterToggle = document.getElementById('filter-toggle');
+  const filterControls = document.getElementById('filter-controls');
+  const zipSelectorEl = document.getElementById('zip-selector');
+  // Assigned later once zip data is loaded; declared here to satisfy no-use-before-define
+  let loadAllZipBoundaries;
+
   // Load tile style metadata for data-driven breakpoints
   let metadata = null;
   try {
@@ -696,9 +655,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     map.setFilter('properties-selected-outline', idFilter);
   });
 
-  // Shared reference needed by both popup and zip selector
-  const zipSelectorEl = document.getElementById('zip-selector');
-
   // Address autocomplete (Photon OSM, Philadelphia bounded)
   const addressInput = document.getElementById('address-input');
   const addressBtn = document.getElementById('address-search-btn');
@@ -819,7 +775,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         map.flyTo({ center: results[0].lngLat, zoom: 17 });
       } else {
         addressInput.style.outline = '2px solid #d73027';
-        setTimeout(() => { addressInput.style.outline = ''; }, 2000);
+        setTimeout(() => { addressInput.style.outline = '' }, 2000);
       }
     }
   });
@@ -938,13 +894,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const clearHoveredZip = () => setHoveredZip(null);
 
-  const selectZip = (zip) => {
-    closeZipSelector();
-    zipInput.value = zip;
-    applyZip(zip);
-    showZipBoundary(zip);
-  };
-
   const openZipSelector = () => {
     zipSelectorEl.removeAttribute('hidden');
     ['zip-all-line', 'zip-hover-fill', 'zip-hover-line', 'zip-all-hit'].forEach((id) => {
@@ -958,6 +907,13 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', 'none');
     });
     clearHoveredZip();
+  };
+
+  const selectZip = (zip) => {
+    closeZipSelector();
+    zipInput.value = zip;
+    applyZip(zip);
+    showZipBoundary(zip);
   };
 
   zipBrowseBtn.addEventListener('click', () => {
@@ -979,7 +935,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   // Load all Philadelphia ZCTA boundaries (called from map.on('load'))
-  const loadAllZipBoundaries = async () => {
+  loadAllZipBoundaries = async () => {
     try {
       const res = await fetch(
         "https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/PUMA_TAD_TAZ_UGA_ZCTA/MapServer/1/query?where=ZCTA5+LIKE+'191%25'&outFields=ZCTA5&outSR=4326&f=geojson",
@@ -1057,8 +1013,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   };
 
   // Discrepancy filter — dims properties below threshold, highlights those above
-  const filterToggle = document.getElementById('filter-toggle');
-  const filterControls = document.getElementById('filter-controls');
   const thresholdSlider = document.getElementById('threshold-slider');
   const thresholdValue = document.getElementById('threshold-value');
 

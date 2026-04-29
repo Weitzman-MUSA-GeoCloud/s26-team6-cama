@@ -186,6 +186,7 @@ body {
 }
 
 #address-clear:hover { color: var(--dark); }
+
 #address-clear svg { width: 14px; height: 14px; }
 
 #address-search-btn {
@@ -351,6 +352,7 @@ body {
 }
 
 #zip-browse-btn:hover { background: var(--blue-pale); color: var(--blue); }
+
 #zip-browse-btn svg { width: 14px; height: 14px; }
 
 /* ── Zip selector panel ──────────────────────────────── */

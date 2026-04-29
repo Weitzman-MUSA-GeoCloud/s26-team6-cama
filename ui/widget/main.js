@@ -39,7 +39,7 @@ const setStatus = (msg, isError = false) => {
 
 const debounce = (fn, delay) => {
   let timer;
-  return (...args) => { clearTimeout(timer); timer = setTimeout(() => fn(...args), delay); };
+  return (...args) => { clearTimeout(timer); timer = setTimeout(() => fn(...args), delay) };
 };
 
 const fetchSuggestions = async (query) => {
