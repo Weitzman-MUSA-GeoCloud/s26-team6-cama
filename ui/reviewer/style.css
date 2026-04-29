@@ -209,6 +209,7 @@ body {
 }
 
 #address-search-btn:hover { background: #0a3060; }
+
 #address-search-btn:disabled {
   opacity: 0.6;
   cursor: default;
