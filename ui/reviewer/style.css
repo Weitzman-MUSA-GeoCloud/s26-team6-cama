@@ -65,7 +65,10 @@ body {
 
 .city-bar-back:hover { opacity: 1; }
 
-.city-bar-title { flex: 1; text-align: center; }
+.city-bar-title {
+  flex: 1;
+  text-align: center;
+}
 
 .city-bar-dept {
   font-weight: 500;
@@ -187,7 +190,10 @@ body {
 
 #address-clear:hover { color: var(--dark); }
 
-#address-clear svg { width: 14px; height: 14px; }
+#address-clear svg {
+  width: 14px;
+  height: 14px;
+}
 
 #address-search-btn {
   background: var(--blue);
@@ -198,12 +204,15 @@ body {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  border-radius: 0 0 8px 0;
+  border-radius: 0 0 8px;
   transition: background 0.15s;
 }
 
 #address-search-btn:hover { background: #0a3060; }
-#address-search-btn:disabled { opacity: 0.6; cursor: default; }
+#address-search-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
 
 #address-search-btn svg {
   width: 15px;
@@ -315,7 +324,7 @@ body {
   outline: none;
   background: transparent;
   min-width: 0;
-  border-radius: 8px 0 0 0;
+  border-radius: 8px 0 0;
 }
 
 #zip-input::placeholder { color: #b0a9a0; }
@@ -351,9 +360,15 @@ body {
   transition: background 0.15s, color 0.15s;
 }
 
-#zip-browse-btn:hover { background: var(--blue-pale); color: var(--blue); }
+#zip-browse-btn:hover {
+  background: var(--blue-pale);
+  color: var(--blue);
+}
 
-#zip-browse-btn svg { width: 14px; height: 14px; }
+#zip-browse-btn svg {
+  width: 14px;
+  height: 14px;
+}
 
 /* ── Zip selector panel ──────────────────────────────── */
 #zip-selector {
@@ -496,8 +511,15 @@ body {
   font-size: 11px;
 }
 
-.tooltip-dl dt { color: rgb(255 255 255 / 65%); white-space: nowrap; }
-.tooltip-dl dd { margin: 0; font-weight: 500; }
+.tooltip-dl dt {
+  color: rgb(255 255 255 / 65%);
+  white-space: nowrap;
+}
+
+.tooltip-dl dd {
+  margin: 0;
+  font-weight: 500;
+}
 
 /* ── MapLibre popup (shown near clicked property) ────── */
 .map-popup .maplibregl-popup-content {
@@ -543,8 +565,17 @@ body {
   gap: 5px 12px;
 }
 
-.popup-details dt { color: var(--gray-600); white-space: nowrap; font-size: 12px; }
-.popup-details dd { margin: 0; font-weight: 600; font-size: 12px; }
+.popup-details dt {
+  color: var(--gray-600);
+  white-space: nowrap;
+  font-size: 12px;
+}
+
+.popup-details dd {
+  margin: 0;
+  font-weight: 600;
+  font-size: 12px;
+}
 .change-pos { color: #31a354; }
 .change-neg { color: #d73027; }
 

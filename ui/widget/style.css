@@ -146,6 +146,13 @@ body {
   padding: 2px;
 }
 
+.btn-primary svg {
+  width: 16px;
+  height: 16px;
+  stroke: #fff;
+  flex-shrink: 0;
+}
+
 /* ── Info panel ─────────────────────────────────────── */
 #info-panel {
   grid-area: info;
@@ -201,7 +208,7 @@ body {
   margin-bottom: 6px;
 }
 
-.input-row--suggest {
+.input-row-suggest {
   position: relative;
   flex-wrap: wrap;
 }
@@ -278,13 +285,6 @@ body {
 
 .btn-primary:hover {
   background: #0a3060;
-}
-
-.btn-primary svg {
-  width: 16px;
-  height: 16px;
-  stroke: #fff;
-  flex-shrink: 0;
 }
 
 .field-hint {

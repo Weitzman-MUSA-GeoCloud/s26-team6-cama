@@ -108,6 +108,41 @@ const fetchPropertyAndAssessments = async (parcelNumber) => {
   return res.json(); // { property, assessments }
 };
 
+const renderCharacteristics = (prop) => {
+  const el = document.getElementById('property-chars');
+  if (!el) return;
+
+  const area = Number(prop['total_livable_area']) || 0;
+  const value = Number(prop['market_value']) || 0;
+  const perSqft = area > 0 ? Math.round(value / area) : null;
+  const yearBuilt = prop['year_built'];
+  const typeLabel = CATEGORY_LABELS[prop['category_code']] || `Category ${prop['category_code']}`;
+  const beds = prop['number_of_bedrooms'];
+  const baths = prop['number_of_bathrooms'] != null ? Number(prop['number_of_bathrooms']) : null;
+
+  const items = [
+    yearBuilt != null ? { value: yearBuilt, label: 'Year Built' } : null,
+    area > 0 ? { value: `${Math.round(area).toLocaleString()} sq ft`, label: 'Living Area' } : null,
+    { value: typeLabel, label: 'Property Type' },
+    perSqft != null ? { value: `$${perSqft.toLocaleString()} / sq ft`, label: 'Value per sq ft' } : null,
+    beds != null ? { value: beds, label: 'Bedrooms' } : null,
+    baths != null ? { value: baths, label: 'Bathrooms' } : null,
+  ].filter(Boolean);
+
+  if (items.length === 0) { el.hidden = true; return }
+
+  el.innerHTML = `
+    <p class="chars-section-label">Property characteristics</p>
+    <div class="chars-grid">
+      ${items.map((item) => `
+        <div class="char-item">
+          <span class="char-item-value">${item.value}</span>
+          <span class="char-item-label">${item.label}</span>
+        </div>`).join('')}
+    </div>`;
+  el.removeAttribute('hidden');
+};
+
 const updatePropertyInfo = (prop, assessData) => {
   document.getElementById('property-empty').hidden = true;
   document.getElementById('property-loaded').removeAttribute('hidden');
@@ -131,41 +166,6 @@ const showPropertyError = (msg) => {
   document.getElementById('meta-market-value').textContent = '—';
   document.getElementById('meta-record-count').textContent = '—';
   document.getElementById('property-chars').hidden = true;
-};
-
-const renderCharacteristics = (prop) => {
-  const el = document.getElementById('property-chars');
-  if (!el) return;
-
-  const area = Number(prop['total_livable_area']) || 0;
-  const value = Number(prop['market_value']) || 0;
-  const perSqft = area > 0 ? Math.round(value / area) : null;
-  const yearBuilt = prop['year_built'];
-  const typeLabel = CATEGORY_LABELS[prop['category_code']] || `Category ${prop['category_code']}`;
-  const beds = prop['number_of_bedrooms'];
-  const baths = prop['number_of_bathrooms'] != null ? Number(prop['number_of_bathrooms']) : null;
-
-  const items = [
-    yearBuilt != null ? { value: yearBuilt, label: 'Year Built' } : null,
-    area > 0 ? { value: `${Math.round(area).toLocaleString()} sq ft`, label: 'Living Area' } : null,
-    { value: typeLabel, label: 'Property Type' },
-    perSqft != null ? { value: `$${perSqft.toLocaleString()} / sq ft`, label: 'Value per sq ft' } : null,
-    beds != null ? { value: beds, label: 'Bedrooms' } : null,
-    baths != null ? { value: baths, label: 'Bathrooms' } : null,
-  ].filter(Boolean);
-
-  if (items.length === 0) { el.hidden = true; return; }
-
-  el.innerHTML = `
-    <p class="chars-section-label">Property characteristics</p>
-    <div class="chars-grid">
-      ${items.map((item) => `
-        <div class="char-item">
-          <span class="char-item-value">${item.value}</span>
-          <span class="char-item-label">${item.label}</span>
-        </div>`).join('')}
-    </div>`;
-  el.removeAttribute('hidden');
 };
 
 const renderBreakdownChart = (assessData) => {
