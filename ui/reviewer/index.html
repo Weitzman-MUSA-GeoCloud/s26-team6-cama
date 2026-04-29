@@ -31,99 +31,171 @@
       </div>
       <h1>Tax Assessor Review</h1>
     </div>
-    <div id="header-controls"></div>
   </header>
 
   <main id="reviewer-main">
 
+    <!-- ── Map section ─────────────────────────────── -->
     <section id="map-section">
       <div id="property-map"></div>
 
-      <form id="map-layer-control">
-        <fieldset>
-          <legend>Map layer</legend>
+      <!-- Search panel: zip (top) + address (bottom, so dropdown goes down) -->
+      <div id="search-panel">
+        <div id="zip-filter">
+          <input type="text" id="zip-input" placeholder="Filter by zip code…" maxlength="5" inputmode="numeric">
+          <button id="zip-clear" hidden aria-label="Clear zip">×</button>
+          <button id="zip-browse-btn" aria-label="Browse all zip codes" title="Browse all zip codes">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+        </div>
+        <div id="address-search">
+          <input
+            type="text"
+            id="address-input"
+            placeholder="Search Philadelphia address…"
+            autocomplete="off"
+            role="combobox"
+            aria-autocomplete="list"
+            aria-expanded="false"
+            aria-controls="address-suggestions"
+          >
+          <button id="address-clear" hidden aria-label="Clear address">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+          <button id="address-search-btn" aria-label="Search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+          </button>
+          <div id="address-suggestions" role="listbox" hidden></div>
+        </div>
+      </div>
 
-          <label>
-            <input type="radio" name="map-layer" value="current-value" checked>
-            <span>Current assessment</span>
+      <!-- Zip selector panel (opens when browse button clicked) -->
+      <div id="zip-selector" hidden>
+        <div class="zip-selector-header">
+          <span>Philadelphia zip codes</span>
+          <button id="zip-selector-close" aria-label="Close">×</button>
+        </div>
+        <div id="zip-list"></div>
+      </div>
+
+      <!-- Controls panel: map layer + discrepancy (top-right) -->
+      <div id="controls-panel">
+        <form id="map-layer-control">
+          <fieldset>
+            <legend>Map layer</legend>
+
+            <label>
+              <input type="radio" name="map-layer" value="current-value">
+              <span>ML predicted</span>
+            </label>
+
+            <label>
+              <input type="radio" name="map-layer" value="tax-year-value">
+              <span>Tax year value</span>
+            </label>
+
+            <label>
+              <input type="radio" name="map-layer" value="percent-change" checked>
+              <span>Change (%)</span>
+            </label>
+
+            <label>
+              <input type="radio" name="map-layer" value="dollar-change">
+              <span>Change ($)</span>
+            </label>
+          </fieldset>
+        </form>
+
+        <div id="discrepancy-filter">
+          <label class="filter-toggle-label">
+            <input type="checkbox" id="filter-toggle">
+            Highlight discrepancies
           </label>
+          <div id="filter-controls" hidden>
+            <div class="filter-row">
+              <span>Min change:</span>
+              <strong id="threshold-value">20%</strong>
+            </div>
+            <input type="range" id="threshold-slider" min="5" max="60" value="20" step="5">
+          </div>
+        </div>
+      </div>
 
-          <label>
-            <input type="radio" name="map-layer" value="tax-year-value">
-            <span>Tax year 2023</span>
-          </label>
-
-          <label>
-            <input type="radio" name="map-layer" value="percent-change">
-            <span>Change (%)</span>
-          </label>
-
-          <label>
-            <input type="radio" name="map-layer" value="dollar-change">
-            <span>Change ($)</span>
-          </label>
-        </fieldset>
-      </form>
-
-      <div id="property-popup" hidden>
-        <p class="popup-address">—</p>
-        <dl class="popup-details">
-          <dt>Current:</dt><dd>—</dd>
-          <dt>2023:</dt><dd>—</dd>
-          <dt>Change:</dt><dd>—</dd>
+      <!-- Hover tooltip (lightweight, follows cursor) -->
+      <div id="hover-tooltip" hidden>
+        <p class="tooltip-address">—</p>
+        <dl class="tooltip-dl">
+          <dt>ID</dt><dd id="tooltip-id">—</dd>
+          <dt id="tooltip-value-label">ML predicted</dt><dd id="tooltip-value">—</dd>
+          <dt id="tooltip-change-label" hidden>vs. tax year</dt><dd id="tooltip-change" hidden>—</dd>
         </dl>
+      </div>
+
+      <!-- Legend (bottom-right of map, vertical) -->
+      <div id="legend-box">
+        <p class="legend-note" id="legend-note">Tax year assessed value</p>
+        <div class="legend-body">
+          <div class="legend-ramp" id="legend-ramp"></div>
+          <div class="legend-labels" id="legend-labels">
+            <span>$1M+</span><span>$500k</span><span>$200k</span><span>$100k</span><span>$0</span>
+          </div>
+        </div>
       </div>
 
       <div id="zoom-hint" aria-live="polite">Zoom in to see individual properties</div>
     </section>
 
+    <!-- ── Info panel ──────────────────────────────── -->
     <aside id="info-panel">
 
-      <section id="legend-section">
-        <h2>Value legend</h2>
-        <div class="legend-ramp" id="legend-ramp"></div>
-        <div class="legend-labels" id="legend-labels">
-          <span>$0</span>
-          <span>$100k</span>
-          <span>$200k</span>
-          <span>$500k</span>
-          <span>$1M+</span>
-        </div>
-        <p class="legend-note" id="legend-note">Tax year assessed value</p>
-      </section>
-
+      <!-- Summary: OPA-focused comparison stats -->
       <section id="summary-section">
-        <h2>Summary</h2>
-        <p id="summary-text">Loading assessment data…</p>
+        <h2>Assessment Overview <span id="stat-selected-year" class="h2-year"></span></h2>
+        <div class="stat-cards">
+          <div class="stat-card">
+            <span class="stat-card-value" id="stat-coverage">—</span>
+            <span class="stat-card-label">Residential parcels</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-card-value" id="stat-official-median">—</span>
+            <span class="stat-card-label">Official median (tax year)</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-card-value" id="stat-predicted-median">—</span>
+            <span class="stat-card-label">ML predicted median</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-card-value" id="stat-ratio">—</span>
+            <span class="stat-card-label">Estimated market shift</span>
+          </div>
+        </div>
       </section>
 
-      <section id="selected-property">
-        <h2>Selected property</h2>
-        <p class="no-selection-hint" id="no-selection-hint">Click a property on the map to see details.</p>
-        <dl id="property-detail-list" hidden>
-          <dt>Address</dt><dd id="info-address">—</dd>
-          <dt>Property ID</dt><dd id="info-property-id">—</dd>
-          <dt>Current assessed value</dt><dd id="info-current-value">—</dd>
-          <dt>Tax year 2023 value</dt><dd id="info-tax-year-value">—</dd>
-          <dt>Change</dt><dd id="info-change">—</dd>
-        </dl>
+      <!-- Charts (moved from bottom) -->
+      <section id="charts-section">
+        <div class="chart-container">
+          <h3>Tax year distribution</h3>
+          <p class="chart-subtitle">Properties by assessed market value bin</p>
+          <div id="year-selector" class="year-selector"></div>
+          <div id="current-value-chart" class="chart"></div>
+        </div>
+
+        <div class="chart-container">
+          <h3>Predicted distribution</h3>
+          <p class="chart-subtitle">Properties by ML-predicted value bin</p>
+          <div id="percent-change-chart" class="chart"></div>
+        </div>
       </section>
 
     </aside>
-
-    <section id="charts-section">
-      <div class="chart-container">
-        <h3 id="chart1-title">Tax year assessment distribution</h3>
-        <p class="chart-subtitle" id="chart1-subtitle">Number of properties by assessed value bin (most recent year)</p>
-        <div id="current-value-chart" class="chart"></div>
-      </div>
-
-      <div class="chart-container">
-        <h3>Predicted assessment distribution</h3>
-        <p class="chart-subtitle">Number of properties by ML-predicted value bin (most recent year)</p>
-        <div id="percent-change-chart" class="chart"></div>
-      </div>
-    </section>
 
   </main>
 

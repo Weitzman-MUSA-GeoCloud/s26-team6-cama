@@ -33,6 +33,7 @@ CREATE OR REPLACE TABLE `derived.property_tile_info` AS (
     SELECT
         o.property_id,
         o.location AS address,
+        o.zip_code,
         par.geometry AS geog,
         cp.predicted_value AS current_assessed_value,
         la.tax_year_assessed_value

@@ -45,16 +45,18 @@
           Look up a property
         </h2>
         <form id="lookup-form">
-          <label for="opa-id-input" class="field-label">OPA Parcel Number</label>
-          <div class="input-row">
+          <label for="address-input" class="field-label">Property Address</label>
+          <div class="input-row input-row-suggest">
             <input
               type="text"
-              id="opa-id-input"
-              name="opa-id"
-              placeholder="e.g. 883309050"
-              inputmode="numeric"
-              pattern="[0-9]{9,10}"
+              id="address-input"
+              name="address"
+              placeholder="e.g. 1234 Market St"
               autocomplete="off"
+              role="combobox"
+              aria-autocomplete="list"
+              aria-expanded="false"
+              aria-controls="address-suggestions"
             >
             <button type="submit" class="btn-primary">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -62,8 +64,9 @@
                 <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
               </svg>
             </button>
+            <div id="address-suggestions" role="listbox" hidden></div>
           </div>
-          <p class="field-hint">Enter the 9 or 10-digit OPA parcel number</p>
+          <p class="field-hint">Start typing a Philadelphia address</p>
         </form>
         <p id="lookup-status" class="lookup-status" role="status" aria-live="polite"></p>
       </section>
@@ -85,9 +88,11 @@
           <p id="property-city-zip" class="property-city-zip">—</p>
           <dl class="property-meta">
             <dt>OPA ID</dt><dd id="meta-opa-id">—</dd>
-            <dt>Tax balance</dt><dd id="meta-tax-balance">—</dd>
+            <dt>Owner</dt><dd id="meta-owner">—</dd>
+            <dt>Current value</dt><dd id="meta-market-value">—</dd>
             <dt>Records</dt><dd id="meta-record-count">—</dd>
           </dl>
+          <div id="property-chars" hidden></div>
         </div>
       </section>
 
@@ -95,8 +100,14 @@
 
     <section id="chart-section">
       <h3>Assessment value over time</h3>
-      <p class="section-subtitle">Market value by tax year</p>
+      <p class="section-subtitle">Market value by tax year · years with &gt;10% change are labeled</p>
       <div id="valuation-chart" class="chart"></div>
+    </section>
+
+    <section id="breakdown-section">
+      <h3>Value breakdown</h3>
+      <p class="section-subtitle">Taxable land vs. building by tax year</p>
+      <div id="breakdown-chart" class="chart breakdown-placeholder"></div>
     </section>
 
     <section id="table-section">
