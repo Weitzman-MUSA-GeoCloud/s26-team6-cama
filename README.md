@@ -1,219 +1,238 @@
-# Philadelphia Computer-Assisted Mass Appraisal (CAMA) Project
+# SmartCAMA
 
-The following is a description of the various infrastructural components of the project. **The names and schemas used here are important, as each team will be working on different components of the project. The names and schemas are designed to be consistent across teams, so that the various components can be integrated together.** If you have any questions about the names or schemas, please ask!
+SmartCAMA is a cloud-based, computer-assisted mass appraisal (CAMA) prototype for Philadelphia residential properties. It combines public property and parcel data with a BigQuery ML valuation model, then publishes the results through two browser-based applications:
 
-The overview slides for the project are available [here](https://docs.google.com/presentation/d/1XRS2O_0IJNv2jknYMHfWHBhhqFn0e2gyK_vgbQMAUKg/edit?usp=sharing).
+- **Tax Assessor Review** — an interactive parcel map for comparing modeled values with official tax-year assessments, filtering by ZIP code, finding large discrepancies, and reviewing citywide value distributions.
+- **Property Owner Widget** — an address search experience with property characteristics, assessment history, year-over-year changes, and land/building value breakdowns.
 
-## Local Development
+The project includes data-pipeline components, model SQL, map-tile generation, a lookup API, and the static front end.
 
-This repository uses linters for several languages to ensure code quality:
+> [!IMPORTANT]
+> This repository is a prototype. Model predictions are not official property assessments and should not be used as a substitute for an appraisal or an assessment issued by the City of Philadelphia.
 
-- `eslint` for JavaScript
-- `stylelint` for CSS
-- `sqlfluff` for SQL
-- `flake8` for Python
+## How it works
 
-To install the linters, first ensure you have Node.js and Python installed. This repository is set up with a Poetry configuration, so if you don't have a preference for environment manager (such as `uv` or `conda`), also install Poetry.
-
-After you have the package managers installed, you can install the linters by running:
-
-```bash
-npm install  # Installs JavaScript and CSS linters
-poetry install  # Installs Python and SQL linters
+```mermaid
+flowchart LR
+    A[Philadelphia open data] --> B[Extract functions]
+    B --> C[Cloud Storage: raw data]
+    C --> D[Prepare functions]
+    D --> E[Cloud Storage: prepared files]
+    E --> F[BigQuery source tables]
+    F --> G[BigQuery core tables]
+    G --> H[Feature engineering]
+    H --> I[BigQuery ML model]
+    I --> J[Predicted assessments]
+    G --> K[Historical assessment summaries]
+    J --> L[Charts, metadata, and GeoJSON]
+    K --> L
+    L --> M[Vector tiles and JSON assets]
+    M --> N[Assessor review app]
+    G --> O[Property lookup API]
+    O --> P[Property owner widget]
 ```
 
-Finally, you can run the linters by running:
+The pipeline uses four logical storage layers:
 
-```bash
-npm run lint  # Runs all linters
+| Layer | Purpose |
+| --- | --- |
+| Raw | Original downloads from the source systems. |
+| Prepared | Cleaned Parquet or JSONL files used by BigQuery external tables. |
+| Core | Typed, query-ready copies of the source data. |
+| Derived | Training data, models, predictions, chart bins, and map-ready records. |
+
+## Technology
+
+- **Google Cloud Functions** for extraction, preparation, loading, transformation, asset export, and property lookup
+- **Google Cloud Storage** for raw data, prepared data, temporary GeoJSON, vector tiles, and public JSON assets
+- **BigQuery and BigQuery ML** for warehouse tables, feature engineering, random-forest training, and prediction
+- **Google Cloud Workflows** for pipeline orchestration
+- **Cloud Run Jobs** and **GDAL/OGR** for vector-tile generation
+- **MapLibre GL JS** for parcel mapping
+- **ApexCharts** for assessment visualizations
+- **GitHub Pages** for the static front end
+
+## Repository structure
+
+```text
+SmartCAMA/
+├── .github/workflows/   # Linting and GitHub Pages deployment
+├── eda/                 # Exploratory data analysis and feature notes
+├── sql/model/           # Model experiments and assessment prediction SQL
+├── tasks/               # Deployable cloud functions, job, and workflow
+│   ├── data-pipeline/
+│   ├── extract-*/
+│   ├── prepare-*/
+│   ├── load-*/
+│   ├── transform-*/
+│   ├── predict-current-assessments/
+│   ├── export-*/
+│   ├── generate-*/
+│   └── property-lookup/
+└── ui/
+    ├── index.html       # Application landing page
+    ├── reviewer/        # Assessor map and distribution dashboard
+    └── widget/          # Public property history lookup
 ```
 
-Or you can run the linters individually:
+## Data sources
+
+The core pipeline starts with these Philadelphia datasets:
+
+| Dataset | Use in SmartCAMA |
+| --- | --- |
+| [Properties and Assessment History](https://opendataphilly.org/dataset/opa-property-assessments) | Property characteristics, sales, current values, and historical assessments. |
+| [PWD Stormwater Billing Parcels](https://opendataphilly.org/dataset/pwd-stormwater-billing-parcels) | Parcel geometry used to build the property map. |
+
+The extraction functions download OPA CSV files from Philadelphia's public download service and query parcel records through the Philadelphia Carto API.
+
+## Local development
+
+### Prerequisites
+
+- Node.js 22 or a compatible current release
+- Python 3.9 or later
+- [Poetry](https://python-poetry.org/) for the Python development environment
+
+Install the development dependencies:
 
 ```bash
-npm run lint-js  # Runs JavaScript linter
-npm run lint-css  # Runs CSS linter
-npm run lint-sql  # Runs SQL linter
-npm run lint-py  # Runs Python linter
+npm ci
+poetry install
 ```
 
-The linters will automatically fix most issues, but some may require manual intervention.
+### Preview the web applications
 
-## Cloud Storage Buckets
+The UI is static, so it can be served with any local HTTP server:
 
-Since bucket names must be globally unique, each name contains `team<N>` which should be replaced with your actual team number (i.e., `team1`, `team2`, etc.). The buckets are organized as follows:
+```bash
+python3 -m http.server 8000 --directory ui
+```
 
-| Bucket name | Description of contents |
-|-------------|-------------------------|
-| `musa5090s25-team<N>-raw_data` | Raw data from the sources. |
-| `musa5090s25-team<N>-prepared_data` | Data prepared for external tables in BigQuery. |
-| `musa5090s25-team<N>-temp_data` | Temporary data used during processing. Files stored here will be deleted after a few days. |
-| `musa5090s25-team<N>-public` | Files that are accessible to the public. These files are primarily inteded to be consumed by the assessment review and property information apps. |
+Open `http://localhost:8000` to choose an application, or go directly to:
 
-### Raw Data
+- `http://localhost:8000/reviewer/`
+- `http://localhost:8000/widget/`
 
-In the `musa5090s25-team<N>-raw_data` bucket, there are three folders. Each folder may contain one or multiple files, depending on the type of data loaded (for example, a shapefile may be stored as multiple files). The folders are as follows:
+The local UI currently reads from the deployed Team 6 API and public Cloud Storage assets. An internet connection is therefore required even when the HTML, CSS, and JavaScript are served locally.
 
-| Folder | Contents |
-|--------|----------|
-| `/opa_properties/` | Contains the "properties" data downloaded from the [Philadelphia Properties and Assessment History](https://opendataphilly.org/dataset/opa-property-assessments) dataset on OpenDataPhilly. |
-| `/opa_assessments/` | Contains the "property assessment history" data downloaded from the [Philadelphia Properties and Assessment History](https://opendataphilly.org/dataset/opa-property-assessments) dataset on OpenDataPhilly. |
-| `/pwd_parcels/` | Contains the "PWD parcels" data downloaded from the [PWD Stormwater Billing Parcels](https://opendataphilly.org/dataset/pwd-stormwater-billing-parcels) dataset on OpenDataPhilly. |
+### Run quality checks
 
-There are other datasets available on OpenDataPhilly that may be useful for the project (e.g. [Real Estate Transfers](https://opendataphilly.org/datasets/real-estate-transfers/) contains a history of property sales back to 1999, or [Building and Zoning Permits](https://opendataphilly.org/datasets/licenses-and-inspections-building-and-zoning-permits/) can tell you when properties have had renovations, or [Street Centerlines](https://opendataphilly.org/datasets/street-centerlines/) could help identify major arterials, ...), but I encourage you to start simple with the datasets in the table above.
+Run every configured linter:
 
-### Prepared Data
+```bash
+npm run lint
+```
 
-In the `musa5090s25-team<N>-prepared_data` bucket, there are three folders. Each should contain a single file named `data.jsonl` or `data.parquet`. The folders are as follows:
+Or run a single linter:
 
-| Folder | Contents |
-|--------|----------|
-| `/opa_properties/` | Contains the "properties" data prepared for external tables in BigQuery. |
-| `/opa_assessments/` | Contains the "property assessment history" data prepared for external tables in BigQuery. |
-| `/pwd_parcels/` | Contains the "PWD parcels" data prepared for external tables in BigQuery. |
+```bash
+npm run lint-js
+npm run lint-css
+npm run lint-sql
+npm run lint-py
+```
 
-### Public Files
+The JavaScript, CSS, and SQL commands apply safe automatic fixes where possible. Review the resulting diff before committing.
 
-The `musa5090s25-team<N>-public` bucket contains files that are formatted to be used in the assessment review dashboard. These files are accessible via public URLs. Files used in this way (as artifacts for a web application) are often called "assets".
+## Data pipeline
 
-| Folder | Contents |
-|--------|----------|
-| `/tiles/` | Map tiles for the assessment reviewer
-| `/configs/` | Configuration files for the charts and other parts of the assessment reviewer interface.
+The workflow definition is in [`tasks/data-pipeline/workflow.yaml`](tasks/data-pipeline/workflow.yaml). Its deployable components are grouped by responsibility:
 
-## BigQuery
+1. **Extract**
+   - `extract-opa-properties`
+   - `extract-opa-assessments`
+   - `extract-pwd-parcels`
+2. **Prepare**
+   - `prepare-opa-properties`
+   - `prepare-opa-assessments`
+   - `prepare-pwd-parcels`
+3. **Load**
+   - `load-opa-properties`
+   - `load-opa-assessments`
+   - `load-pwd-parcels`
+4. **Model and transform**
+   - `transform-current-assessments-model-training-data`
+   - `predict-current-assessments`
+   - `transform-tax-year-assessment-bins`
+   - `transform-current-assessment-bins`
+5. **Publish application assets**
+   - `export-assessment-chart-configs`
+   - `export-property-tile-info`
+   - `generate-tile-style-metadata`
+   - `generate-property-map-tiles`
+6. **Serve property details**
+   - `property-lookup`
 
-### Datasets
+Each Python task has its own `requirements.txt` so it can be deployed independently. SQL that belongs to a task is stored beside its Python entry point.
 
-| Dataset | Description |
-|---------|-------------|
-| `source` | External tables backed by prepared source data in Cloud Storage. |
-| `core` | Data that is ready to be used for analysis. For the most part, the tables here are just copies of the external tables. |
-| `derived` | Data that has been derived from core data. Outputs from analyses or models go here. |
+> [!NOTE]
+> The checked-in workflow also calls a deployed `generate-assessment-bins` function whose source is not present in this repository. Remove or replace that step when creating a deployment solely from this codebase.
 
-### Tables
+## Cloud resources
 
-#### Source Tables
+The checked-in deployment is configured for the Google Cloud project `musa5090s26-team6`, primarily in `us-east4`.
 
-The tables in `source` are external tables. These are your warehouse's raw materials. The data is stored in JSON-L or Parquet files in the `musa5090s25-team<N>-prepared_data` Cloud Storage bucket.
+### Cloud Storage
 
-- `source.opa_properties`
-- `source.opa_assessments`
-- `source.pwd_parcels`
+| Bucket | Contents |
+| --- | --- |
+| `musa5090s26-team6-raw_data` | Source CSV downloads. |
+| `musa5090s26-team6-prepared_data` | Prepared Parquet and JSONL files for BigQuery external tables. |
+| `musa5090s26-team6-temp_data` | Intermediate GeoJSON used during vector-tile generation. |
+| `musa5090s26-team6-public` | Public map tiles and UI configuration JSON. |
 
-#### Core Tables
+The public bucket is organized as follows:
 
-There's a correlated table in `core` for each table in `source`. Even though external tables are convenient for getting data into BigQuery, they're not the most efficient to query from. So, we copy the data into a table in `core` and query from there. There may be some cleaning and normalization useful that you do to the source data as you copy it over, such as ensuring that numbers and dates are stored in the correct format.
+```text
+configs/
+├── current_assessment_bins.json
+├── tax_year_assessment_bins.json
+└── tile_style_metadata.json
+tiles/
+└── {z}/{x}/{y}.pbf
+```
 
-In addition to the fields from the raw tables, each of the core tables will have a cleaned and standardized `property_id` string field (derived from the OPA or BRT number) that can be used as the unique identifier for a property across the tables.
+### BigQuery
 
-- `core.opa_properties`
-- `core.opa_assessments`
-- `core.pwd_parcels`
+| Dataset | Important objects |
+| --- | --- |
+| `source` | External `opa_properties`, `opa_assessments`, and `pwd_parcels` tables backed by prepared files. |
+| `core` | Typed, internal copies of the three source tables with a standardized `property_id`. |
+| `derived` | Model training data, the BigQuery ML model, predicted assessments, distribution bins, and map-ready parcel data. |
 
-#### Derived Tables
+Key derived objects include:
 
-The `derived` schema contains all-new tables with data based on analyses and predictions on data from the `core` tables. Below, each table is listed with the _minimal_ fields to include. The tables may have more fields than these (e.g., for `current_assessments` we may choose to store confidence interval data), but they will definitely have _at least_ the listed fields.
+- `current_assessments_model_training_data`
+- `saleprice_model_current`
+- `current_assessments`
+- `tax_year_assessment_bins`
+- `current_assessment_bins`
+- `property_tile_info`
 
-- `derived.tax_year_assessment_bins` -- The bins used to create the assessment distribution chart for a given tax year.
+## Deploying to another Google Cloud project
 
-  *Minimal fields:*
-  - `tax_year`
-  - `lower_bound`
-  - `upper_bound`
-  - `property_count`
+Cloud project IDs, bucket names, function URLs, and public asset URLs are currently checked into the task SQL, Python, workflow YAML, shell script, and UI JavaScript. Before deploying a fork:
 
-- `derived.current_assessment_bins` -- The bins used to create the distribution chart for the values generated by the assessment model.
+1. Create the `source`, `core`, and `derived` BigQuery datasets.
+2. Create raw, prepared, temporary, and public Cloud Storage buckets.
+3. Replace the Team 6 project, bucket, and endpoint values throughout `tasks/`, `sql/`, and `ui/`.
+4. Deploy the functions using the decorated function name in each task's `main.py` as its entry point.
+5. Build and deploy `tasks/generate-property-map-tiles` as a Cloud Run Job.
+6. Deploy `tasks/data-pipeline/workflow.yaml` and grant its service account permission to invoke the functions and job.
+7. Configure the public bucket for read access and CORS as required by the browser applications.
 
-  *Minimal fields:*
-  - `lower_bound`
-  - `upper_bound`
-  - `property_count`
+The pipeline identity needs permission to read and write the project buckets, run BigQuery jobs, invoke Cloud Functions and Cloud Run, and execute Workflows. Use least-privilege IAM roles appropriate for your deployment.
 
-- `derived.property_tile_info` -- The information needed to generate map tiles for the assessment review dashboard.
+## Continuous integration and deployment
 
-  *Minimal fields:*
-  - `property_id`
-  - `address`
-  - `geog`
-  - `current_assessed_value` (as predicted by the model in the `derived.current_assessments` table)
-  - `tax_year_assessed_value` (during the most recent tax year in the `core.opa_assessments` table)
+- Pull requests and pushes to `main` run Flake8, ESLint, Stylelint, and SQLFluff through GitHub Actions.
+- Pushes to `main` publish the contents of `ui/` to GitHub Pages.
 
-- `derived.assessment_inputs` -- The inputs used to predict the current assessment value for each property.
+## Contributing
 
-  *Minimal fields:*
-  - `property_id`
-  - Whatever other fields are needed to make predictions...
+See [`GIT_WORKFLOW.md`](GIT_WORKFLOW.md) for the repository's branch, commit, pull-request, and review conventions. Keep generated artifacts, dependency directories, credentials, and local environment files out of commits.
 
-- `derived.tax_year_assessments` -- The assessment values for each property for each tax year.
+## Project background
 
-  *Minimal fields:*
-  - `tax_year`
-  - `property_id`
-  - `assessed_value`
-
-- `derived.current_assessments` -- The current assessment values for each property as predicted by the model.
-
-  *Minimal fields:*
-  - `property_id`
-  - `assessed_value`
-
-
-
-## Cloud Functions
-
-### Extracting
-
-Each of these tasks download data from some source and store the data in `musa5090s25-team<N>-raw_data`.
-
-- `extract-opa-properties`
-- `extract-opa-assessments`
-- `extract-pwd-parcels`
-
-### Preparing (i.e. little-t transforming)
-
-Each of these tasks read raw stored data from GCS and converts it into a clean CSV file in `musa5090s25-team<N>-prepared_data`.
-
-- `prepare-opa-properties`
-- `prepare-opa-assessments`
-- `prepare-pwd-parcels`
-
-### Loading
-
-Each of these creates (or replaces) an external table in the `source` dataset in BigQuery, and creates or replaces a copy of that data in the `core` dataset.
-
-- `load-opa-properties`
-- `load-opa-assessments`
-- `load-pwd-parcels`
-
-### Transforming (big-T)
-
-Each of these tasks reads data from the `core` dataset, performs some analysis or aggregation, and writes the results to the `derived` dataset.
-
-- `transform-tax-year-assessment-bins`
-- `transform-current-assessment-bins`
-
-### Generating assets
-
-- `generate-property-map-tile-data`
-- `generate-assessment-chart-configs`
-
-## Cloud Run jobs
-
-To run the assessment prediction across all the properties, we use a Cloud Run job named `predict-current-assessments`. The script reads the `derived.assessment_inputs` table and writes the results to the `derived.current_assessments` table.
-
-To create the vector tiles for the assessment review dashboard, we use a Cloud Run job named `generate-property-map-tiles`. The script downloads the `property_tile_info.geojson` file from the `musa5090s25-team<N>-temp_data` bucket, generates vector tiles, and writes the results to the `musa5090s25-team<N>-public/tiles` folder.
-
-## Workflows
-
-For extracting, loading, transforming, and predicting on data, there is a single workflow named `data-pipeline`. This workflow is triggered by a Cloud Scheduler job that runs once per week.
-
-## Service Accounts
-
-In each project, a service account named `data-pipeline-user` was created to provide necessary access to different GCP services. The following roles are assigned to the service account:
-
-- `Storage Object Admin`
-- `BigQuery Job User`
-- `Cloud Functions Invoker`
-- `Cloud Run Invoker`
-- `Workflows Invoker`
+The original project overview slides are available in [Google Slides](https://docs.google.com/presentation/d/1XRS2O_0IJNv2jknYMHfWHBhhqFn0e2gyK_vgbQMAUKg/edit?usp=sharing).
