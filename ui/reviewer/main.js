@@ -9,7 +9,7 @@ const currentBinsUrl = 'https://storage.googleapis.com/musa5090s26-team6-public/
 const taxYearBinsUrl = 'https://storage.googleapis.com/musa5090s26-team6-public/configs/tax_year_assessment_bins.json';
 
 // 5-class sequential green palette (ColorBrewer)
-const valueColors = ['#f7fcf5', '#c7e9c0', '#74c476', '#31a354', '#006d2c'];
+const valueColors = ['#f7fcf5', '#c7e9c0', '#74c476', '#207338', '#006d2c'];
 // Diverging palette for change modes
 const pctStops = [-0.5, -0.2, -0.05, 0.05, 0.2, 0.5];
 const pctColors = ['#d73027', '#fc8d59', '#fee08b', '#d9ef8b', '#91cf60', '#1a9850'];
@@ -140,6 +140,30 @@ const medianFromBins = (bins) => {
   return bins[bins.length - 1]['lower_bound'];
 };
 
+// Keep exact chart values available independently of SVG, color and hover.
+const renderDistributionTable = (container, bins, year) => {
+  let details = document.getElementById(`${container.id}-data`);
+  if (!details) {
+    details = document.createElement('details');
+    details.id = `${container.id}-data`;
+    details.className = 'accessible-data';
+    container.after(details);
+  }
+  details.replaceChildren();
+  const summary = document.createElement('summary');
+  summary.textContent = `View distribution data${year ? ` for ${year}` : ''}`;
+  const table = document.createElement('table');
+  table.innerHTML = '<caption>Assessment value ranges and property counts</caption><thead><tr><th scope="col">Value range</th><th scope="col">Properties</th></tr></thead>';
+  const body = document.createElement('tbody');
+  bins.forEach((bin) => {
+    const row = body.insertRow();
+    row.insertCell().textContent = `${formatCurrency(bin.lower_bound)} – ${formatCurrency(bin.upper_bound)}`;
+    row.insertCell().textContent = Number(bin.property_count).toLocaleString();
+  });
+  table.append(body);
+  details.append(summary, table);
+};
+
 // Render bar chart of property counts by value bin (most recent year)
 const renderBinsChart = (container, data) => {
   const hasTaxYear = data.length > 0 && 'tax_year' in data[0];
@@ -165,6 +189,9 @@ const renderBinsChart = (container, data) => {
     return lb >= 1000 ? `$${(lb / 1000).toFixed(0)}k` : `$${lb}`;
   });
   const counts = yearData.map((d) => d['property_count']);
+  container.setAttribute('aria-hidden', 'true');
+  container.inert = true;
+  renderDistributionTable(container, yearData, latestYear);
 
   container.classList.add('chart-loaded');
 
@@ -241,7 +268,7 @@ const updateSummaryForYear = (bins, year, metadata) => {
     const shiftEl = document.getElementById('stat-ratio');
     shiftEl.textContent = `${sign}${shift.toFixed(1)}%`;
     // Negative shift = market below official → possible over-assessment
-    shiftEl.style.color = shift > 5 ? '#31a354' : shift < -5 ? '#d73027' : '#6d6d6d';
+    shiftEl.style.color = shift > 5 ? '#207338' : shift < -5 ? '#d73027' : '#6d6d6d';
   }
 };
 
@@ -251,9 +278,11 @@ const renderYearSelector = (container, years, defaultYear, onSelect) => {
     const btn = document.createElement('button');
     btn.className = `year-btn${year === defaultYear ? ' active' : ''}`;
     btn.textContent = year;
+    btn.setAttribute('aria-pressed', String(year === defaultYear));
     btn.addEventListener('click', () => {
-      container.querySelectorAll('.year-btn').forEach((b) => b.classList.remove('active'));
+      container.querySelectorAll('.year-btn').forEach((b) => (b.classList.remove('active'), b.setAttribute('aria-pressed', 'false')));
       btn.classList.add('active');
+      btn.setAttribute('aria-pressed', 'true');
       onSelect(year);
     });
     container.appendChild(btn);
@@ -275,6 +304,9 @@ const renderTaxYearChart = (container, data, year) => {
     return lb >= 1000 ? `$${(lb / 1000).toFixed(0)}k` : `$${lb}`;
   });
   const counts = yearData.map((d) => d['property_count']);
+  container.setAttribute('aria-hidden', 'true');
+  container.inert = true;
+  renderDistributionTable(container, yearData, year);
 
   if (taxYearChartInstance) {
     taxYearChartInstance.updateOptions({ xaxis: { categories } }, false, false);
@@ -608,6 +640,36 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
+  // Same rendered parcel data as the map, available to keyboard and screen readers.
+  const refreshProperties = () => {
+    const body = document.querySelector('#map-data tbody');
+    body.replaceChildren();
+    const features = map.getLayer('properties-fill')
+      ? map.queryRenderedFeatures({ layers: ['properties-fill'] }) : [];
+    const seen = new Set();
+    features.forEach(({ properties: p }) => {
+      if (seen.has(p.property_id)) return;
+      seen.add(p.property_id);
+      const row = body.insertRow();
+      const link = document.createElement('a');
+      link.href = `../widget/?parcel_number=${encodeURIComponent(p.property_id)}`;
+      link.textContent = p.address || 'Unknown address';
+      row.insertCell().append(link);
+      row.insertCell().textContent = p.property_id;
+      row.insertCell().textContent = formatCurrency(p.current_assessed_value);
+      row.insertCell().textContent = formatCurrency(p.tax_year_assessed_value);
+      const base = Number(p.tax_year_assessed_value);
+      row.insertCell().textContent = base > 0
+        ? `${((Number(p.current_assessed_value) - base) / base * 100).toFixed(1)}%` : 'Unavailable';
+    });
+    document.getElementById('map-status').textContent = seen.size
+      ? `${seen.size} visible properties listed.` : 'No properties in this view. Search an address or zoom in, then refresh.';
+  };
+  document.getElementById('refresh-properties').addEventListener('click', refreshProperties);
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') { hoverTooltip.hidden = true; mapPopup.remove() }
+  });
+
   // Click popup (detailed, appears below clicked point)
   map.on('click', 'properties-fill', (e) => {
     if (!e.features || e.features.length === 0) return;
@@ -672,6 +734,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (suggestions.length === 0) {
       suggestionsEl.hidden = true;
       addressInput.setAttribute('aria-expanded', 'false');
+      addressInput.removeAttribute('aria-activedescendant');
       return;
     }
 
@@ -679,12 +742,15 @@ document.addEventListener('DOMContentLoaded', async () => {
       const item = document.createElement('div');
       item.className = 'suggestion-item';
       item.setAttribute('role', 'option');
+      item.id = `address-option-${i}`;
+      item.setAttribute('aria-selected', 'false');
       item.textContent = s.label;
       item.addEventListener('mousedown', (ev) => {
         ev.preventDefault();
         addressInput.value = s.label;
         suggestionsEl.hidden = true;
         addressInput.setAttribute('aria-expanded', 'false');
+        addressInput.removeAttribute('aria-activedescendant');
         map.flyTo({ center: s.lngLat, zoom: 17 });
       });
       suggestionsEl.appendChild(item);
@@ -697,7 +763,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const debouncedFetch = debounce(async (query) => {
     const results = await fetchSuggestions(query);
-    renderSuggestions(results);
+    if (addressInput.value.trim() === query && document.activeElement === addressInput) renderSuggestions(results);
   }, 280);
 
   addressInput.addEventListener('input', () => {
@@ -707,6 +773,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       debouncedFetch(q);
     } else {
       suggestionsEl.hidden = true;
+      addressInput.setAttribute('aria-expanded', 'false');
+      addressInput.removeAttribute('aria-activedescendant');
     }
   });
 
@@ -715,6 +783,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     addressClearBtn.hidden = true;
     suggestionsEl.hidden = true;
     addressInput.setAttribute('aria-expanded', 'false');
+    addressInput.removeAttribute('aria-activedescendant');
     activeSuggestions = [];
     const emptyFilter = ['==', ['get', 'property_id'], ''];
     if (map.getLayer('properties-selected')) {
@@ -726,32 +795,49 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   addressInput.addEventListener('keydown', (e) => {
-    const items = suggestionsEl.querySelectorAll('.suggestion-item');
+    const items = suggestionsEl.hidden ? [] : suggestionsEl.querySelectorAll('.suggestion-item');
 
     if (e.key === 'ArrowDown') {
       e.preventDefault();
       activeIndex = Math.min(activeIndex + 1, items.length - 1);
-      items.forEach((el, i) => el.classList.toggle('active', i === activeIndex));
+      items.forEach((el, i) => {
+        el.classList.toggle('active', i === activeIndex);
+        el.setAttribute('aria-selected', String(i === activeIndex));
+        if (i === activeIndex) el.scrollIntoView({ block: 'nearest' });
+      });
+      if (items[activeIndex]) addressInput.setAttribute('aria-activedescendant', items[activeIndex].id);
+      else addressInput.removeAttribute('aria-activedescendant');
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
       activeIndex = Math.max(activeIndex - 1, -1);
-      items.forEach((el, i) => el.classList.toggle('active', i === activeIndex));
+      items.forEach((el, i) => {
+        el.classList.toggle('active', i === activeIndex);
+        el.setAttribute('aria-selected', String(i === activeIndex));
+        if (i === activeIndex) el.scrollIntoView({ block: 'nearest' });
+      });
+      if (items[activeIndex]) addressInput.setAttribute('aria-activedescendant', items[activeIndex].id);
+      else addressInput.removeAttribute('aria-activedescendant');
     } else if (e.key === 'Enter') {
       e.preventDefault();
-      if (activeIndex >= 0 && activeSuggestions[activeIndex]) {
+      if (addressInput.getAttribute('aria-expanded') === 'true' && activeIndex >= 0 && activeSuggestions[activeIndex]) {
         const s = activeSuggestions[activeIndex];
         addressInput.value = s.label;
         suggestionsEl.hidden = true;
+        addressInput.setAttribute('aria-expanded', 'false');
+        addressInput.removeAttribute('aria-activedescendant');
         map.flyTo({ center: s.lngLat, zoom: 17 });
       } else if (activeSuggestions.length > 0) {
         const s = activeSuggestions[0];
         addressInput.value = s.label;
         suggestionsEl.hidden = true;
+        addressInput.setAttribute('aria-expanded', 'false');
+        addressInput.removeAttribute('aria-activedescendant');
         map.flyTo({ center: s.lngLat, zoom: 17 });
       }
     } else if (e.key === 'Escape') {
       suggestionsEl.hidden = true;
       addressInput.setAttribute('aria-expanded', 'false');
+      addressInput.removeAttribute('aria-activedescendant');
     }
   });
 
@@ -759,6 +845,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     setTimeout(() => {
       suggestionsEl.hidden = true;
       addressInput.setAttribute('aria-expanded', 'false');
+      addressInput.removeAttribute('aria-activedescendant');
     }, 150);
   });
 
@@ -769,12 +856,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       const s = activeSuggestions[0];
       map.flyTo({ center: s.lngLat, zoom: 17 });
       suggestionsEl.hidden = true;
+      addressInput.setAttribute('aria-expanded', 'false');
+      addressInput.removeAttribute('aria-activedescendant');
     } else {
       const results = await fetchSuggestions(q);
       if (results.length > 0) {
         map.flyTo({ center: results[0].lngLat, zoom: 17 });
       } else {
-        addressInput.style.outline = '2px solid #d73027';
+        document.getElementById('map-status').textContent = 'No matching address found. Try a street number and street name.';
         setTimeout(() => { addressInput.style.outline = '' }, 2000);
       }
     }
@@ -896,6 +985,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const openZipSelector = () => {
     zipSelectorEl.removeAttribute('hidden');
+    zipBrowseBtn.setAttribute('aria-expanded', 'true');
+    zipSelectorClose.focus();
     ['zip-all-line', 'zip-hover-fill', 'zip-hover-line', 'zip-all-hit'].forEach((id) => {
       if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', 'visible');
     });
@@ -903,6 +994,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const closeZipSelector = () => {
     zipSelectorEl.hidden = true;
+    zipBrowseBtn.setAttribute('aria-expanded', 'false');
+    zipBrowseBtn.focus();
     ['zip-all-line', 'zip-hover-fill', 'zip-hover-line', 'zip-all-hit'].forEach((id) => {
       if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', 'none');
     });
@@ -921,6 +1014,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   zipSelectorClose.addEventListener('click', closeZipSelector);
+  zipSelectorEl.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeZipSelector(); });
 
   zipListEl.addEventListener('mouseover', (e) => {
     const item = e.target.closest('.zip-item');
@@ -1007,7 +1101,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       // Populate list
       const zips = data.features.map((f) => f.properties.ZCTA5).sort();
       zipListEl.innerHTML = zips
-        .map((z) => `<div class="zip-item" data-zip="${z}">${z}</div>`)
+        .map((z) => `<button type="button" class="zip-item" data-zip="${z}">${z}</button>`)
         .join('');
     } catch { /* ignore */ }
   };

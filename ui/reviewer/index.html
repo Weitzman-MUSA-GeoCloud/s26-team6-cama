@@ -11,8 +11,10 @@
 
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4/dist/maplibre-gl.css">
+  <link rel="stylesheet" href="../accessibility.css">
 </head>
 <body>
+  <a class="skip-link" href="#reviewer-main">Skip to main content</a>
 
   <div class="city-bar">
     <a href="../" class="city-bar-back">← Dashboard</a>
@@ -33,24 +35,25 @@
     </div>
   </header>
 
-  <main id="reviewer-main">
+  <main id="reviewer-main" tabindex="-1">
 
     <!-- ── Map section ─────────────────────────────── -->
     <section id="map-section">
-      <div id="property-map"></div>
+      <div id="property-map" role="region" aria-label="Property assessment map"></div>
 
       <!-- Search panel: zip (top) + address (bottom, so dropdown goes down) -->
       <div id="search-panel">
         <div id="zip-filter">
-          <input type="text" id="zip-input" placeholder="Filter by zip code…" maxlength="5" inputmode="numeric">
+          <label for="zip-input" class="visually-hidden">Filter by zip code</label><input type="text" id="zip-input" placeholder="Filter by zip code…" maxlength="5" inputmode="numeric">
           <button id="zip-clear" hidden aria-label="Clear zip">×</button>
-          <button id="zip-browse-btn" aria-label="Browse all zip codes" title="Browse all zip codes">
+          <button id="zip-browse-btn" aria-expanded="false" aria-controls="zip-selector" aria-label="Browse all zip codes" title="Browse all zip codes">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="6 9 12 15 18 9"></polyline>
             </svg>
           </button>
         </div>
         <div id="address-search">
+          <label for="address-input" class="visually-hidden">Search Philadelphia address</label>
           <input
             type="text"
             id="address-input"
@@ -73,7 +76,7 @@
               <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
             </svg>
           </button>
-          <div id="address-suggestions" role="listbox" hidden></div>
+          <div id="address-suggestions" aria-label="Address suggestions" role="listbox" hidden></div>
         </div>
       </div>
 
@@ -121,7 +124,7 @@
           </label>
           <div id="filter-controls" hidden>
             <div class="filter-row">
-              <span>Min change:</span>
+              <label for="threshold-slider">Min change (%):</label>
               <strong id="threshold-value">20%</strong>
             </div>
             <input type="range" id="threshold-slider" min="5" max="60" value="20" step="5">
@@ -155,6 +158,13 @@
 
     <!-- ── Info panel ──────────────────────────────── -->
     <aside id="info-panel">
+      <section class="accessible-data">
+        <h2>Properties in map view</h2>
+        <p>Use the map arrow keys to pan and + / − to zoom, or search an address. Refresh the list after moving or filtering the map.</p>
+        <button id="refresh-properties" type="button">Refresh property list</button>
+        <p id="map-status" role="status"></p>
+        <div class="table-wrap" tabindex="0" role="region" aria-label="Properties in map view"><table id="map-data"><caption>Visible properties and assessment comparison</caption><thead><tr><th scope="col">Address / history</th><th scope="col">Property ID</th><th scope="col">ML predicted</th><th scope="col">Tax year value</th><th scope="col">Change (%)</th></tr></thead><tbody></tbody></table></div>
+      </section>
 
       <!-- Summary: OPA-focused comparison stats -->
       <section id="summary-section">
@@ -184,7 +194,7 @@
         <div class="chart-container">
           <h3>Tax year distribution</h3>
           <p class="chart-subtitle">Properties by assessed market value bin</p>
-          <div id="year-selector" class="year-selector"></div>
+          <div id="year-selector" class="year-selector" role="group" aria-label="Tax year"></div>
           <div id="current-value-chart" class="chart"></div>
         </div>
 

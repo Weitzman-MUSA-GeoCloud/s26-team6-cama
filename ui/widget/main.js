@@ -261,7 +261,7 @@ const renderValuationChart = (assessData) => {
         text: `${pct > 0 ? '+' : ''}${Math.round(pct)}%`,
         style: {
           background: 'transparent',
-          color: pct > 0 ? '#31a354' : '#d73027',
+          color: pct > 0 ? '#207338' : '#d73027',
           fontSize: '9px',
           fontWeight: '700',
           padding: { top: 0, bottom: 0, left: 2, right: 2 },
@@ -413,18 +413,22 @@ document.addEventListener('DOMContentLoaded', () => {
     if (suggestions.length === 0) {
       suggestionsEl.hidden = true;
       addressInput.setAttribute('aria-expanded', 'false');
+      addressInput.removeAttribute('aria-activedescendant');
       return;
     }
-    suggestions.forEach((s) => {
+    suggestions.forEach((s, i) => {
       const item = document.createElement('div');
       item.className = 'suggestion-item';
       item.setAttribute('role', 'option');
+      item.id = `address-option-${i}`;
+      item.setAttribute('aria-selected', 'false');
       item.textContent = s.label;
       item.addEventListener('mousedown', (e) => {
         e.preventDefault();
         addressInput.value = s.label;
         suggestionsEl.hidden = true;
         addressInput.setAttribute('aria-expanded', 'false');
+        addressInput.removeAttribute('aria-activedescendant');
         loadProperty(s.addressSearch);
       });
       suggestionsEl.appendChild(item);
@@ -434,28 +438,44 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   const debouncedFetch = debounce(async (query) => {
-    renderSuggestions(await fetchSuggestions(query));
+    const results = await fetchSuggestions(query);
+    if (addressInput.value.trim() === query && document.activeElement === addressInput) renderSuggestions(results);
   }, 280);
 
   addressInput.addEventListener('input', () => {
     const q = addressInput.value.trim();
     if (q.length >= 3) debouncedFetch(q);
     else suggestionsEl.hidden = true;
+    addressInput.setAttribute('aria-expanded', 'false');
+    addressInput.removeAttribute('aria-activedescendant');
   });
 
   addressInput.addEventListener('keydown', (e) => {
-    const items = suggestionsEl.querySelectorAll('.suggestion-item');
+    const items = suggestionsEl.hidden ? [] : suggestionsEl.querySelectorAll('.suggestion-item');
     if (e.key === 'ArrowDown') {
       e.preventDefault();
       activeIndex = Math.min(activeIndex + 1, items.length - 1);
-      items.forEach((el, i) => el.classList.toggle('active', i === activeIndex));
+      items.forEach((el, i) => {
+        el.classList.toggle('active', i === activeIndex);
+        el.setAttribute('aria-selected', String(i === activeIndex));
+        if (i === activeIndex) el.scrollIntoView({ block: 'nearest' });
+      });
+      if (items[activeIndex]) addressInput.setAttribute('aria-activedescendant', items[activeIndex].id);
+      else addressInput.removeAttribute('aria-activedescendant');
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
       activeIndex = Math.max(activeIndex - 1, -1);
-      items.forEach((el, i) => el.classList.toggle('active', i === activeIndex));
+      items.forEach((el, i) => {
+        el.classList.toggle('active', i === activeIndex);
+        el.setAttribute('aria-selected', String(i === activeIndex));
+        if (i === activeIndex) el.scrollIntoView({ block: 'nearest' });
+      });
+      if (items[activeIndex]) addressInput.setAttribute('aria-activedescendant', items[activeIndex].id);
+      else addressInput.removeAttribute('aria-activedescendant');
     } else if (e.key === 'Escape') {
       suggestionsEl.hidden = true;
       addressInput.setAttribute('aria-expanded', 'false');
+      addressInput.removeAttribute('aria-activedescendant');
     }
   });
 
@@ -463,16 +483,20 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
       suggestionsEl.hidden = true;
       addressInput.setAttribute('aria-expanded', 'false');
+      addressInput.removeAttribute('aria-activedescendant');
     }, 150);
   });
 
   lookupForm.addEventListener('submit', (e) => {
     e.preventDefault();
+    const wasExpanded = !suggestionsEl.hidden;
     suggestionsEl.hidden = true;
+    addressInput.setAttribute('aria-expanded', 'false');
+    addressInput.removeAttribute('aria-activedescendant');
     let search;
-    if (activeIndex >= 0 && activeSuggestions[activeIndex]) {
+    if (wasExpanded && activeIndex >= 0 && activeSuggestions[activeIndex]) {
       search = activeSuggestions[activeIndex].addressSearch;
-    } else if (activeSuggestions.length > 0) {
+    } else if (wasExpanded && activeSuggestions.length > 0) {
       search = activeSuggestions[0].addressSearch;
     } else {
       search = addressInput.value.trim().split(' ').slice(0, 2).join(' ').toUpperCase();

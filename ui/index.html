@@ -235,9 +235,11 @@
       .stats-strip { gap: 28px; }
     }
   </style>
+  <link rel="stylesheet" href="accessibility.css">
 </head>
 
 <body>
+  <a class="skip-link" href="#main-content">Skip to main content</a>
 
   <div class="city-bar">
     <span class="city-bar-dot"></span>
@@ -245,7 +247,7 @@
     <span style="margin-left: auto; font-weight: 500; opacity: 0.7;">Office of Property Assessment</span>
   </div>
 
-  <main>
+  <main id="main-content" tabindex="-1">
 
     <div class="hero">
       <h1>Philadelphia<br><span>CAMA</span> Dashboard</h1>

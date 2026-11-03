@@ -10,8 +10,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&family=Open+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="../accessibility.css">
 </head>
 <body>
+  <a class="skip-link" href="#widget-main">Skip to main content</a>
 
   <div class="city-bar">
     <a href="../" class="city-bar-back">← Dashboard</a>
@@ -32,7 +34,7 @@
     <div id="header-controls"></div>
   </header>
 
-  <main id="widget-main">
+  <main id="widget-main" tabindex="-1">
 
     <aside id="info-panel">
 
@@ -58,7 +60,7 @@
               aria-expanded="false"
               aria-controls="address-suggestions"
             >
-            <button type="submit" class="btn-primary">
+            <button type="submit" class="btn-primary" aria-label="Search property">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <circle cx="11" cy="11" r="8"></circle>
                 <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
@@ -99,22 +101,23 @@
     </aside>
 
     <section id="chart-section">
-      <h3>Assessment value over time</h3>
-      <p class="section-subtitle">Market value by tax year · years with &gt;10% change are labeled</p>
-      <div id="valuation-chart" class="chart"></div>
+      <h2>Assessment value over time</h2>
+      <p class="section-subtitle">Market value by tax year · years with &gt;10% change are labeled. Exact values are in the assessment history table below.</p>
+      <div id="valuation-chart" inert aria-hidden="true" class="chart"></div>
     </section>
 
     <section id="breakdown-section">
-      <h3>Value breakdown</h3>
-      <p class="section-subtitle">Taxable land vs. building by tax year</p>
-      <div id="breakdown-chart" class="chart breakdown-placeholder"></div>
+      <h2>Value breakdown</h2>
+      <p class="section-subtitle">Taxable land vs. building by tax year. Exact values are in the assessment history table below.</p>
+      <div id="breakdown-chart" inert aria-hidden="true" class="chart breakdown-placeholder"></div>
     </section>
 
     <section id="table-section">
-      <h3>Assessment history</h3>
+      <h2>Assessment history</h2>
       <p class="section-subtitle">All recorded tax years</p>
-      <div class="table-wrap">
+      <div class="table-wrap" tabindex="0" role="region" aria-label="Assessment history">
         <table id="valuation-table">
+          <caption class="visually-hidden">Property assessment history by tax year</caption>
           <thead>
             <tr>
               <th scope="col">Year</th>
